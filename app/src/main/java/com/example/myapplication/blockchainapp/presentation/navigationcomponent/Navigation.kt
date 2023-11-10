@@ -1,5 +1,6 @@
 package com.example.myapplication.blockchainapp.presentation.navigationcomponent
 
+import AllUsers
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
@@ -21,12 +22,14 @@ import com.example.myapplication.blockchainapp.presentation.signup.type.Distribu
 import com.example.myapplication.blockchainapp.presentation.signup.type.Manufacturer
 import com.example.myapplication.blockchainapp.presentation.signup.type.Retailer
 
+import com.example.myapplication.blockchainapp.presentation.users.ChainUsers
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screen.LoginScreen.route) {
+    NavHost(navController = navController, startDestination = Screen.AllUsersScreen.route) {
         composable(
             route = Screen.LoginScreen.route
         ) {
@@ -67,6 +70,12 @@ fun Navigation() {
         }
         composable(Screen.ResetCredScreen.route) {
             ResetCred(navController = navController)
+        }
+        composable(Screen.AllUsersScreen.route) {
+            AllUsers(navController = navController)
+        }
+        composable(Screen.ChainUsersScreen.route) {
+            ChainUsers(navController = navController)
         }
     }
 }

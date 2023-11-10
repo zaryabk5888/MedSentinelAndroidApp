@@ -15,5 +15,9 @@ sealed class Screen(val route : String){
     object HistoryScreen : Screen("History")
     object ResetCredScreen : Screen("ResetCred")
 
+    object AllUsersScreen : Screen("AllUsers")
+
+    object ChainUsersScreen : Screen("ChainUsers")
+
 
 }
