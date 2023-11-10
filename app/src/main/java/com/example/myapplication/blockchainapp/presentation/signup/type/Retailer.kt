@@ -1,5 +1,6 @@
 package com.example.myapplication.blockchainapp.presentation.signup.type
 
+import android.content.ContentValues
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
@@ -44,15 +45,16 @@ import androidx.navigation.NavHostController
 import com.example.blockchainapp.R
 import com.example.myapplication.blockchainapp.presentation.navigationcomponent.Screen
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Retailer(navController: NavHostController) {
-    val username = remember { mutableStateOf("") }
-    val email = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
-    val confirmPassword = remember { mutableStateOf("") }
+    val username = remember { mutableStateOf("retailer@gmail.com") }
+    val email = remember { mutableStateOf("retailer@gmail.com") }
+    val password = remember { mutableStateOf("123456") }
+    val confirmPassword = remember { mutableStateOf("123456") }
     var clickedSignUp by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -219,9 +221,23 @@ fun signUpRetailer(
     )
     if (isValid) {
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
+            .addOnSuccessListener { authResult ->
+                val user = authResult.user
+
+                val profileUpdates = userProfileChangeRequest {
+                    displayName = "retailer"
+                }
+
+                user?.updateProfile(profileUpdates)?.addOnCompleteListener { updateProfileTask ->
+                    if (updateProfileTask.isSuccessful) {
+                        Log.e(ContentValues.TAG, "signUpRetailer: Display name set to retailer")
+                    } else {
+                        Log.e(ContentValues.TAG, "signUpRetailer: Failed to set display name")
+                    }
+                }
+            }.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    fireBaseFireStore.collection("Role-Data").document(email).set(data)
+                    fireBaseFireStore.collection("Retailer").document(email).set(data)
                         .addOnCompleteListener {
                             Toast.makeText(context, "Sign up successful", Toast.LENGTH_SHORT).show()
                             onSignUpResult(true)

@@ -1,5 +1,6 @@
 package com.example.myapplication.blockchainapp.presentation.signup.type
 
+import android.content.ContentValues
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -32,15 +32,16 @@ import androidx.navigation.NavHostController
 import com.example.blockchainapp.R
 import com.example.myapplication.blockchainapp.presentation.navigationcomponent.Screen
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Manufacturer(navController: NavHostController) {
-    var companyName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    var companyName by remember { mutableStateOf("Sentinel") }
+    var email by remember { mutableStateOf("manufacturer@gmail.com") }
+    var password by remember { mutableStateOf("123456") }
+    var confirmPassword by remember { mutableStateOf("123456") }
     var clickedSignUp by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -214,9 +215,22 @@ fun signUpManufacturer(
     )
     if (isValid) {
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
+            .addOnSuccessListener {authResult ->
+                val user = authResult.user
+
+                val profileUpdates = userProfileChangeRequest {
+                    displayName = "manufacturer"
+                }
+
+                user?.updateProfile(profileUpdates)?.addOnCompleteListener { updateProfileTask ->
+                    if (updateProfileTask.isSuccessful) {
+                        Log.e(ContentValues.TAG, "signUpManufacturer: Display name set to manufacturer")
+                    } else {
+                        Log.e(ContentValues.TAG, "signUpManufacturer: Failed to set display name")
+                    }
+                }}.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    fireBaseFireStore.collection("Role-Data").document(email).set(data)
+                    fireBaseFireStore.collection("Manufacturer").document(email).set(data)
                         .addOnCompleteListener {
                             Toast.makeText(context, "Sign up successful", Toast.LENGTH_SHORT).show()
                             onSignUpResult(true)
@@ -235,6 +249,4 @@ fun signUpManufacturer(
         Toast.makeText(context, "Some fields are empty or the passwords do not match", Toast.LENGTH_SHORT).show()
     }
 }
-
-
 

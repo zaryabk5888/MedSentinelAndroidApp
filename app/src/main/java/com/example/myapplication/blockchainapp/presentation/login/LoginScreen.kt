@@ -132,8 +132,8 @@ fun SimpleOutlinedTextFieldSample(
 ) {
 
     val keyboardController = LocalSoftwareKeyboardController.current
-    var email by rememberSaveable { mutableStateOf("zaryabk5888@gmail.com") }
-    var password by rememberSaveable { mutableStateOf("1234567") }
+    var email by rememberSaveable { mutableStateOf("customer@gmail.com") }
+    var password by rememberSaveable { mutableStateOf("123456") }
     var passwordHidden by rememberSaveable { mutableStateOf(true) }
     var clickedLogin by rememberSaveable { mutableStateOf(false) }
     var loginError by rememberSaveable { mutableStateOf(false) }

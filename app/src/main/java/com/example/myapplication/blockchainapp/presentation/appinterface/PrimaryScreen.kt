@@ -1,6 +1,7 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface
 
 
+import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -57,7 +58,7 @@ fun PrimaryScreen(navController: NavHostController) {
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(title = { Text(text = "${FirebaseAuth.getInstance().currentUser?.email}") },
+                TopAppBar(title = { Text(text = "${FirebaseAuth.getInstance().currentUser?.displayName}") },
                     actions = {
                         IconButton(
                             onClick = {
@@ -128,17 +129,11 @@ fun PrimaryScreen(navController: NavHostController) {
                             }
 
                             val firebaseFireStore = FirebaseFirestore.getInstance()
+                            ownerRole = FirebaseAuth.getInstance().currentUser?.displayName.toString()
 
-                            owner?.let { it1 ->
-                                firebaseFireStore.collection("Role-Data").document(
-                                    it1
-                                ).get().addOnSuccessListener {it->
-                                    ownerRole = it.data?.get("role") as String
-                                    loading = false
-                                    Log.e("role","${it.data?.get("role")}")
-                                }
-                            }
+                            loading = false
                         }else{
+                            Log.e(TAG, "PrimaryScreen: $ownerRole", )
                             if (ownerRole == "manufacturer"){
                                 val cardDataList = listOf(
                                     CardData(
