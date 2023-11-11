@@ -43,23 +43,8 @@ import com.google.firebase.firestore.QuerySnapshot
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllUsers(navController: NavHostController) {
-    var loading by remember {
-        mutableStateOf(true)
-    }
-    var loadingForManufacturer by remember {
-        mutableStateOf(true)
-    }
-    var loadingForDistributor by remember {
-        mutableStateOf(true)
-    }
-    var loadingForRetailer by remember {
-        mutableStateOf(true)
-    }
-    var ownerRole by remember {
-        mutableStateOf("")
-    }
 
-    var firestore by remember {
+    val fireStore by remember {
         mutableStateOf(FirebaseFirestore.getInstance())
     }
     
@@ -86,14 +71,14 @@ fun AllUsers(navController: NavHostController) {
             .fillMaxSize()
             .padding(paddingValues)){
 
-                listToShow(firestore)
+                listToShow(fireStore)
 
         }
     }
 }
 
 @Composable
-fun listToShow(firestore: FirebaseFirestore,) {
+fun listToShow(fireStore: FirebaseFirestore) {
     var showManufacturer by remember {
         mutableStateOf(true)
     }
@@ -174,12 +159,12 @@ fun listToShow(firestore: FirebaseFirestore,) {
                         CircularProgressIndicator()
                     }
                     try {
-                        firestore.collection("Manufacturer")
+                        fireStore.collection("Manufacturer")
                             .get()
                             .addOnSuccessListener { result ->
                                 listOfManufacturer = result
                                 loadingForManufacturer = false
-                                Log.e(TAG, "listToShow: $listOfManufacturer", )
+                                Log.e(TAG, "listToShow: $listOfManufacturer")
                             }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error fetching data for manufacturers: $e")
@@ -191,7 +176,7 @@ fun listToShow(firestore: FirebaseFirestore,) {
                     if (listOfManufacturer != null) {
                         items(listOfManufacturer!!.size()) { index ->
                             val record = listOfManufacturer!!.documents[index]
-                            listDesign(record = record)
+                            ListDesign(record = record)
                         }
                     }
                 }
@@ -210,12 +195,12 @@ fun listToShow(firestore: FirebaseFirestore,) {
                     ){
                         CircularProgressIndicator()
                         try {
-                        firestore.collection("Distributor")
+                        fireStore.collection("Distributor")
                             .get()
                             .addOnSuccessListener { result ->
                                 listOfDistributor = result
                                 loadingForDistributor = false
-                                Log.e(TAG, "listToShow: $listOfDistributor",)
+                                Log.e(TAG, "listToShow: $listOfDistributor")
                             }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error fetching data for manufacturers: $e")
@@ -228,7 +213,7 @@ fun listToShow(firestore: FirebaseFirestore,) {
                     if (listOfDistributor != null) {
                         items(listOfDistributor!!.size()) { index ->
                             val record = listOfDistributor!!.documents[index]
-                            listDesign(record = record)
+                            ListDesign(record = record)
                         }
                     }
                 }
@@ -244,12 +229,12 @@ fun listToShow(firestore: FirebaseFirestore,) {
                     ){
                         CircularProgressIndicator()
                         try {
-                        firestore.collection("Retailer")
+                        fireStore.collection("Retailer")
                             .get()
                             .addOnSuccessListener { result ->
                                 listOfRetailer = result
                                 loadingForRetailer = false
-                                Log.e(TAG, "listToShow: $listOfRetailer",)
+                                Log.e(TAG, "listToShow: $listOfRetailer")
                             }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error fetching data for manufacturers: $e")
@@ -262,7 +247,7 @@ fun listToShow(firestore: FirebaseFirestore,) {
                     if (listOfRetailer != null) {
                         items(listOfRetailer!!.size()) { index ->
                             val record = listOfRetailer!!.documents[index]
-                            listDesign(record = record)
+                            ListDesign(record = record)
                         }
                     }
                 }
@@ -292,7 +277,7 @@ fun CustomCard(
 }
 
 @Composable
-fun listDesign(record: DocumentSnapshot) {
+fun ListDesign(record: DocumentSnapshot) {
     CustomCard {
         Row(
             modifier = Modifier
