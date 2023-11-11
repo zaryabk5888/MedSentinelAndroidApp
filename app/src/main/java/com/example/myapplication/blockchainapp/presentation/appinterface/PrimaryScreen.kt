@@ -4,9 +4,20 @@ package com.example.myapplication.blockchainapp.presentation.appinterface
 import android.content.ContentValues.TAG
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -26,6 +37,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -36,9 +48,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -100,12 +115,13 @@ fun PrimaryScreen(navController: NavHostController) {
                 ModalNavigationDrawer(drawerContent = {
                                                       Column(
                                                           modifier = Modifier
-                                                              .width(200.dp)
+                                                              .padding(top = 60.dp, start = 5.dp)
                                                               .fillMaxHeight()
+                                                              .width(200.dp)
                                                               .background(
                                                                   Color.White
                                                               )) {
-
+                                                         AllUsersScreen(navController)
                                                       }
                                                       }, drawerState = drawerState) {
                     Box(
@@ -128,115 +144,117 @@ fun PrimaryScreen(navController: NavHostController) {
                                 CircularProgressIndicator()
                             }
 
-                            val firebaseFireStore = FirebaseFirestore.getInstance()
+                            FirebaseFirestore.getInstance()
                             ownerRole = FirebaseAuth.getInstance().currentUser?.displayName.toString()
 
                             loading = false
                         }else{
-                            Log.e(TAG, "PrimaryScreen: $ownerRole", )
-                            if (ownerRole == "manufacturer"){
-                                val cardDataList = listOf(
-                                    CardData(
-                                        "Get All Medicine",
-                                        Icons.AutoMirrored.Filled.List
-                                    ) {
-                                        navController.navigate(Screen.GetAllScreen.route)
-                                    },
-                                    CardData(
-                                        "Search Medicine",
-                                        Icons.Filled.Search
-                                    ) {
-                                        navController.navigate(Screen.GetScreen.route)
-                                    },
-                                    CardData(
-                                        "Add Medicine",
-                                        Icons.Filled.Add
-                                    ) {
-                                        navController.navigate(Screen.PostScreen.route)
-                                    },
-                                    CardData(
-                                        "Update Medicine",
-                                        Icons.Filled.Edit
-                                    ) {
-                                        navController.navigate(Screen.UpdateScreen.route)
-                                    },
-                                    CardData(
-                                        "Show Medicine History",
-                                        Icons.Filled.History
-                                    ) {
-                                        navController.navigate(Screen.HistoryScreen.route)
-                                    }
-                                )
-                                GridOfCards(cardDataList)
-                            }else if (
-                                ownerRole == "customer"
-                            ){
-                                val customerDataList = listOf(
-                                    CardData(
-                                        "Search Medicine",
-                                        Icons.Filled.Search
-                                    ) {
-                                        navController.navigate(Screen.GetScreen.route)
-                                    },
-                                    CardData(
-                                        "Show Medicine History",
-                                        Icons.Filled.History
-                                    ) {
-                                        navController.navigate(Screen.HistoryScreen.route)
-                                    }
-                                )
-                                GridOfCards(cardDataList = customerDataList)
-                            }
-                            else if (ownerRole == "distributor") {
-                                val cardDataList = listOf(
-                                    CardData(
-                                        "Get All Medicine",
-                                        Icons.AutoMirrored.Filled.List
-                                    ) {
-                                        navController.navigate(Screen.GetAllScreen.route)
-                                    },
-                                    CardData(
-                                        "Search Medicine",
-                                        Icons.Filled.Search
-                                    ) {
-                                        navController.navigate(Screen.GetScreen.route)
-                                    },
-                                    CardData(
-                                        "Update Medicine",
-                                        Icons.Filled.Edit
-                                    ) {
-                                        navController.navigate(Screen.UpdateScreen.route)
-                                    },
-                                    CardData(
-                                        "Show Medicine History",
-                                        Icons.Filled.History
-                                    ) {
-                                        navController.navigate(Screen.HistoryScreen.route)
-                                    }
-                                )
-                                GridOfCards(cardDataList)
-                            }  else if (ownerRole == "retailer") {
-                                val cardDataList = listOf(
-                                    CardData(
-                                        "Search Medicine",
-                                        Icons.Filled.Search
-                                    ) {
-                                        navController.navigate(Screen.GetScreen.route)
-                                    },
-                                    CardData(
-                                        "Update Medicine",
-                                        Icons.Filled.Edit
-                                    ) {
-                                        navController.navigate(Screen.UpdateScreen.route)
-                                    },
-                                    CardData(
-                                        "Show Medicine History",
-                                        Icons.Filled.History
-                                    ) {
-                                        navController.navigate(Screen.HistoryScreen.route)
-                                    }
-                                )
-                                GridOfCards(cardDataList)
+                            Log.e(TAG, "PrimaryScreen: $ownerRole")
+                            when (ownerRole) {
+                                "manufacturer" -> {
+                                    val cardDataList = listOf(
+                                        CardData(
+                                            "Get All Medicine",
+                                            Icons.AutoMirrored.Filled.List
+                                        ) {
+                                            navController.navigate(Screen.GetAllScreen.route)
+                                        },
+                                        CardData(
+                                            "Search Medicine",
+                                            Icons.Filled.Search
+                                        ) {
+                                            navController.navigate(Screen.GetScreen.route)
+                                        },
+                                        CardData(
+                                            "Add Medicine",
+                                            Icons.Filled.Add
+                                        ) {
+                                            navController.navigate(Screen.PostScreen.route)
+                                        },
+                                        CardData(
+                                            "Update Medicine",
+                                            Icons.Filled.Edit
+                                        ) {
+                                            navController.navigate(Screen.UpdateScreen.route)
+                                        },
+                                        CardData(
+                                            "Show Medicine History",
+                                            Icons.Filled.History
+                                        ) {
+                                            navController.navigate(Screen.HistoryScreen.route)
+                                        }
+                                    )
+                                    GridOfCards(cardDataList)
+                                }
+                                "customer" -> {
+                                    val customerDataList = listOf(
+                                        CardData(
+                                            "Search Medicine",
+                                            Icons.Filled.Search
+                                        ) {
+                                            navController.navigate(Screen.GetScreen.route)
+                                        },
+                                        CardData(
+                                            "Show Medicine History",
+                                            Icons.Filled.History
+                                        ) {
+                                            navController.navigate(Screen.HistoryScreen.route)
+                                        }
+                                    )
+                                    GridOfCards(cardDataList = customerDataList)
+                                }
+                                "distributor" -> {
+                                    val cardDataList = listOf(
+                                        CardData(
+                                            "Get All Medicine",
+                                            Icons.AutoMirrored.Filled.List
+                                        ) {
+                                            navController.navigate(Screen.GetAllScreen.route)
+                                        },
+                                        CardData(
+                                            "Search Medicine",
+                                            Icons.Filled.Search
+                                        ) {
+                                            navController.navigate(Screen.GetScreen.route)
+                                        },
+                                        CardData(
+                                            "Update Medicine",
+                                            Icons.Filled.Edit
+                                        ) {
+                                            navController.navigate(Screen.UpdateScreen.route)
+                                        },
+                                        CardData(
+                                            "Show Medicine History",
+                                            Icons.Filled.History
+                                        ) {
+                                            navController.navigate(Screen.HistoryScreen.route)
+                                        }
+                                    )
+                                    GridOfCards(cardDataList)
+                                }
+                                "retailer" -> {
+                                    val cardDataList = listOf(
+                                        CardData(
+                                            "Search Medicine",
+                                            Icons.Filled.Search
+                                        ) {
+                                            navController.navigate(Screen.GetScreen.route)
+                                        },
+                                        CardData(
+                                            "Update Medicine",
+                                            Icons.Filled.Edit
+                                        ) {
+                                            navController.navigate(Screen.UpdateScreen.route)
+                                        },
+                                        CardData(
+                                            "Show Medicine History",
+                                            Icons.Filled.History
+                                        ) {
+                                            navController.navigate(Screen.HistoryScreen.route)
+                                        }
+                                    )
+                                    GridOfCards(cardDataList)
+                                }
                             }
                         }
                     }
@@ -245,6 +263,40 @@ fun PrimaryScreen(navController: NavHostController) {
         )
     }
 }
+
+@Composable
+fun AllUsersScreen(navController: NavHostController) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        TextButton(
+            onClick = { navController.navigate(Screen.AllUsersScreen.route) },
+            modifier = Modifier
+                .clip(shape = RoundedCornerShape(4.dp))
+        ) {
+            Text(
+                text = "Add User",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontStyle = FontStyle.Italic,
+                color = Color.Black
+                )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        TextButton(
+            onClick = { navController.navigate(Screen.ChainUsersScreen.route) },
+            modifier = Modifier
+                .clip(shape = RoundedCornerShape(4.dp))
+        ) {
+            Text(
+                text = "Chain User",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontStyle = FontStyle.Italic,
+                color = Color.Black
+            )
+        }
+    }
+}
+
 
 data class CardData(val label: String, val icon: ImageVector, val onClick: () -> Unit)
 

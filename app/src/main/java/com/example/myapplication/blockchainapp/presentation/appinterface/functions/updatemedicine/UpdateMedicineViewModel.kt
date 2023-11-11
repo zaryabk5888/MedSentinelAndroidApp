@@ -1,5 +1,6 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.updatemedicine
 
+import android.content.ContentValues
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,7 @@ import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
 import com.example.myapplication.blockchainapp.data.blockchianapi.url
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.example.myapplication.blockchainapp.data.dto.MedicineId
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -151,6 +153,32 @@ class UpdateMedicineViewModel : ViewModel() {
             }
         }
     }
+    fun getChainUsers(userEmail: String): MutableList<ChainUser> {
+
+        val db = FirebaseFirestore.getInstance()
 
 
+        val userCollection = db.collection("Manufacturer")
+
+
+        val chainUsersCollection = userCollection.document(userEmail).collection("ChainUsers")
+
+
+        val chainUsers = chainUsersCollection.get()
+
+
+        val addedChainUsers = mutableListOf<ChainUser>()
+        chainUsers.addOnSuccessListener { result ->
+            for (document in result.documents) {
+                val chainUser = document.toObject(ChainUser::class.java)
+                if (chainUser != null) {
+                    addedChainUsers.add(chainUser)
+                }
+            }
+        }
+
+// Return the list of chain users
+        return addedChainUsers
+    }
 }
+data class ChainUser(val email : String)

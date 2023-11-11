@@ -1,5 +1,8 @@
+import android.content.ContentValues
 import android.content.ContentValues.TAG
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -31,8 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -50,19 +57,20 @@ fun AllUsers(navController: NavHostController) {
     
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(text = "All Users") },
-                actions = {
+            TopAppBar(
+                title = { Text(text = "All Users") },
+                navigationIcon = {
                     IconButton(
                         onClick = {
-
+                            navController.popBackStack()
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Go Back"
+                            imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = "go back"
                         )
                     }
-                }
+                },
             )
         },
         
@@ -71,14 +79,15 @@ fun AllUsers(navController: NavHostController) {
             .fillMaxSize()
             .padding(paddingValues)){
 
-                listToShow(fireStore)
+                ListToShow(fireStore)
 
         }
     }
 }
 
 @Composable
-fun listToShow(fireStore: FirebaseFirestore) {
+fun ListToShow(fireStore: FirebaseFirestore) {
+    val userEmail = FirebaseAuth.getInstance().currentUser?.email
     var showManufacturer by remember {
         mutableStateOf(true)
     }
@@ -106,6 +115,10 @@ fun listToShow(fireStore: FirebaseFirestore) {
         mutableStateOf<QuerySnapshot?>(null)
     }
     var listOfRetailer by remember {
+        mutableStateOf<QuerySnapshot?>(null)
+    }
+
+    var addedChainUsersList by remember {
         mutableStateOf<QuerySnapshot?>(null)
     }
 
@@ -159,24 +172,40 @@ fun listToShow(fireStore: FirebaseFirestore) {
                         CircularProgressIndicator()
                     }
                     try {
-                        fireStore.collection("Manufacturer")
-                            .get()
-                            .addOnSuccessListener { result ->
-                                listOfManufacturer = result
-                                loadingForManufacturer = false
-                                Log.e(TAG, "listToShow: $listOfManufacturer")
-                            }
+                        if (userEmail != null) {
+                            FirebaseFirestore.getInstance()
+                                .collection("Manufacturer")
+                                .document(userEmail)
+                                .collection("ChainUsers")
+                                .get().addOnSuccessListener { result ->
+                                    loadingForManufacturer = false
+                                    addedChainUsersList= result
+                                    Log.e(ContentValues.TAG, "listToShow: $addedChainUsersList")
+                                }.addOnCompleteListener {
+                                    fireStore.collection("Manufacturer")
+                                        .get()
+                                        .addOnSuccessListener { result ->
+                                            listOfManufacturer = result
+                                            loadingForManufacturer = false
+                                            Log.e(TAG, "listToShow: $listOfManufacturer")
+                                        }
+                                }
+                        }
+
                     } catch (e: Exception) {
                         Log.e(TAG, "Error fetching data for manufacturers: $e")
                         loadingForManufacturer = false
                     }
+
                 }
             }else{
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     if (listOfManufacturer != null) {
                         items(listOfManufacturer!!.size()) { index ->
                             val record = listOfManufacturer!!.documents[index]
-                            ListDesign(record = record)
+                            if (record.get("email")!="${FirebaseAuth.getInstance().currentUser?.email}") {
+                                ListDesign(record = record, addedChainUsersList)
+                            }
                         }
                     }
                 }
@@ -206,6 +235,18 @@ fun listToShow(fireStore: FirebaseFirestore) {
                         Log.e(TAG, "Error fetching data for manufacturers: $e")
                         loadingForDistributor = false
                     }
+                        if (userEmail != null) {
+                            FirebaseFirestore.getInstance()
+                                .collection(FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
+                                    it.uppercase()
+                                }
+                                )
+                                .document(userEmail)
+                                .collection("ChainUsers")
+                                .get().addOnSuccessListener { result ->
+                                    addedChainUsersList = result
+                                }
+                        }
                     }
                 }
             }else{
@@ -213,7 +254,12 @@ fun listToShow(fireStore: FirebaseFirestore) {
                     if (listOfDistributor != null) {
                         items(listOfDistributor!!.size()) { index ->
                             val record = listOfDistributor!!.documents[index]
-                            ListDesign(record = record)
+                            if (record.get("email")!="${FirebaseAuth.getInstance().currentUser?.email}") {
+                                ListDesign(
+                                    record = record,
+                                    addedChainUsersList
+                                )
+                            }
                         }
                     }
                 }
@@ -240,6 +286,17 @@ fun listToShow(fireStore: FirebaseFirestore) {
                         Log.e(TAG, "Error fetching data for manufacturers: $e")
                         loadingForRetailer = false
                     }
+                        if (userEmail != null) {
+                            FirebaseFirestore.getInstance()
+                                .collection(FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
+                                    it.uppercase()
+                                })
+                                .document(userEmail)
+                                .collection("ChainUsers")
+                                .get().addOnSuccessListener { result ->
+                                    addedChainUsersList = result
+                                }
+                        }
                     }
                 }
             }else{
@@ -247,7 +304,12 @@ fun listToShow(fireStore: FirebaseFirestore) {
                     if (listOfRetailer != null) {
                         items(listOfRetailer!!.size()) { index ->
                             val record = listOfRetailer!!.documents[index]
-                            ListDesign(record = record)
+                            if (record.get("email")!="${FirebaseAuth.getInstance().currentUser?.email}"){
+                                ListDesign(
+                                    record = record,
+                                    addedChainUsersList = addedChainUsersList
+                                )
+                            }
                         }
                     }
                 }
@@ -277,7 +339,21 @@ fun CustomCard(
 }
 
 @Composable
-fun ListDesign(record: DocumentSnapshot) {
+fun ListDesign(record: DocumentSnapshot, addedChainUsersList: QuerySnapshot?) {
+    val context = LocalContext.current
+    val other = record.get("email")
+    var statusChainUser by remember {
+        mutableStateOf(false)
+    }
+    statusChainUser =  if(addedChainUsersList?.find {
+            it.get("email") == other
+        } !=null){
+        true
+    }else{
+        false
+    }
+
+    Log.e(TAG, "ListDesign: $statusChainUser,$other,${addedChainUsersList?.documents?.size}", )
     CustomCard {
         Row(
             modifier = Modifier
@@ -294,15 +370,72 @@ fun ListDesign(record: DocumentSnapshot) {
             IconButton(
                 onClick = {
                     // Handle friend request action
+                    addUser(record,context)
                 }
             ) {
                 // Add your icon for sending friend request here
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = if (statusChainUser){
+                                                      Icons.Default.Check
+                                                      }else{
+                                                           Icons.Default.Add
+                                                           },
                     contentDescription = "Send Friend Request"
                 )
             }
 
+        }
+    }
+}
+
+fun addUser(record: DocumentSnapshot, context: Context){
+    val fireStore = FirebaseFirestore.getInstance()
+    val userEmail = FirebaseAuth.getInstance().currentUser?.email
+    val userRole = FirebaseAuth.getInstance().currentUser?.displayName
+    val friend = record.get("email")
+    val data = hashMapOf(
+        "email" to friend,
+    )
+    if (userRole == "manufacturer"){
+        if (userEmail != null) {
+            fireStore
+                .collection("Manufacturer")
+                .document(userEmail)
+                .collection("ChainUsers")
+                .document(friend.toString())
+                .set(data).addOnCompleteListener {
+                    Toast.makeText(context,"Added Successfully",Toast.LENGTH_SHORT).show()
+                }.addOnFailureListener {
+                    Toast.makeText(context,"Failed to add",Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+    if (userRole == "distributor"){
+        if (userEmail != null) {
+            fireStore
+                .collection("Distributor")
+                .document(userEmail)
+                .collection("ChainUsers")
+                .document(friend.toString())
+                .set(data).addOnCompleteListener {
+                    Toast.makeText(context,"Added Successfully",Toast.LENGTH_SHORT).show()
+                }.addOnFailureListener {
+                    Toast.makeText(context,"Failed to add",Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+    if (userRole == "retailer"){
+        if (userEmail != null) {
+            fireStore
+                .collection("Retailer")
+                .document(userEmail)
+                .collection("ChainUsers")
+                .document(friend.toString())
+                .set(data).addOnCompleteListener {
+                    Toast.makeText(context,"Added Successfully",Toast.LENGTH_SHORT).show()
+                }.addOnFailureListener {
+                    Toast.makeText(context,"Failed to add",Toast.LENGTH_SHORT).show()
+                }
         }
     }
 }

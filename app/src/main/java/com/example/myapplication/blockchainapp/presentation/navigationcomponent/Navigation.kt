@@ -29,7 +29,7 @@ import com.example.myapplication.blockchainapp.presentation.users.ChainUsers
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screen.AllUsersScreen.route) {
+    NavHost(navController = navController, startDestination = Screen.LoginScreen.route) {
         composable(
             route = Screen.LoginScreen.route
         ) {
