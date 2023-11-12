@@ -23,6 +23,7 @@ import com.example.myapplication.blockchainapp.presentation.signup.type.Manufact
 import com.example.myapplication.blockchainapp.presentation.signup.type.Retailer
 
 import com.example.myapplication.blockchainapp.presentation.users.ChainUsers
+import com.example.myapplication.blockchainapp.presentation.users.TransactionData
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -77,6 +78,9 @@ fun Navigation() {
         }
         composable(Screen.ChainUsersScreen.route) {
             ChainUsers(navController = navController)
+        }
+        composable(Screen.Transaction.route) {
+            TransactionData(navController = navController)
         }
     }
 }

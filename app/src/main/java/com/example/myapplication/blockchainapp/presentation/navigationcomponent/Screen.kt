@@ -19,5 +19,7 @@ sealed class Screen(val route : String){
 
     object ChainUsersScreen : Screen("ChainUsers")
 
+    object Transaction : Screen("Transaction")
+
 
 }
