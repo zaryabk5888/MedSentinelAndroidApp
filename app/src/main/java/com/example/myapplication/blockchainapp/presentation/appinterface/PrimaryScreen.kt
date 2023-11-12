@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.automirrored.outlined.MenuOpen
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
@@ -59,7 +58,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.myapplication.blockchainapp.presentation.navigationcomponent.Screen
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 
 
@@ -77,7 +75,6 @@ fun PrimaryScreen(navController: NavHostController) {
                     actions = {
                         IconButton(
                             onClick = {
-                                navController.enableOnBackPressed(true)
                                 navController.popBackStack()
                                 navController.navigate(Screen.LoginScreen.route)
                                 FirebaseAuth.getInstance().signOut()
@@ -104,7 +101,7 @@ fun PrimaryScreen(navController: NavHostController) {
                             }
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Outlined.MenuOpen,
+                                imageVector = Icons.AutoMirrored.Filled.List,
                                 contentDescription = "Menu"
                             )
                         }
@@ -136,17 +133,14 @@ fun PrimaryScreen(navController: NavHostController) {
                             mutableStateOf(FirebaseAuth.getInstance().currentUser?.email)
                         }
                         Log.e("owner:",owner.toString())
-                        var ownerRole by remember {
-                            mutableStateOf("")
+                        val ownerRole by remember {
+                            mutableStateOf(FirebaseAuth.getInstance().currentUser?.displayName.toString())
                         }
+
                         if (loading){
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
                                 CircularProgressIndicator()
                             }
-
-                            FirebaseFirestore.getInstance()
-                            ownerRole = FirebaseAuth.getInstance().currentUser?.displayName.toString()
-
                             loading = false
                         }else{
                             Log.e(TAG, "PrimaryScreen: $ownerRole")
@@ -266,7 +260,8 @@ fun PrimaryScreen(navController: NavHostController) {
 
 @Composable
 fun AllUsersScreen(navController: NavHostController) {
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()
+    ) {
         TextButton(
             onClick = { navController.navigate(Screen.AllUsersScreen.route) },
             modifier = Modifier

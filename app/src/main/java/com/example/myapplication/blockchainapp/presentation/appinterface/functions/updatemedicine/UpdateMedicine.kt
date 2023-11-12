@@ -1,5 +1,8 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.updatemedicine
 
+import android.content.ContentValues.TAG
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,11 +19,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -34,6 +41,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -42,9 +52,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.delay
 
 
@@ -56,11 +71,13 @@ fun UpdateMedicineScreen(
 
 ) {
     val textFieldValue by updateMedicineViewModel.id.collectAsState()
-
     val loading by updateMedicineViewModel.loading.collectAsState()
     val oneMedicineData by updateMedicineViewModel.oneMedicineData.collectAsState()
     val scrollState = rememberScrollState()
     val keyboardController = LocalSoftwareKeyboardController.current
+    val context = LocalContext.current
+
+  
     Scaffold(
         topBar = {
             TopAppBar(
@@ -191,7 +208,20 @@ fun UpdateMedicineScreen(
                         }
                         ElevatedButton(
                             onClick = {
-                               updateMedicineViewModel.submitChangeDialogue.value = !updateMedicineViewModel.submitChangeDialogue.value
+                                if(updateMedicineViewModel.oneMedicineData.value?.ReceiverId == updateMedicineViewModel.sender.value){ //
+                                    Log.e(
+                                        TAG,
+                                        "UpdateMedicineScreen receiver: ${updateMedicineViewModel.oneMedicineData.value!!.ReceiverId}",
+                                    )
+                                    Log.e(
+                                        TAG,
+                                        "UpdateMedicineScreen sender: ${updateMedicineViewModel.sender.value}",
+                                    )
+                                    updateMedicineViewModel.submitChangeDialogue.value = !updateMedicineViewModel.submitChangeDialogue.value
+                                }else{
+                                    Toast.makeText(context,"You are not the owner",
+                                        Toast.LENGTH_SHORT).show()
+                                }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -268,13 +298,40 @@ fun ShowStatusDialog(
     val textSenderFieldValue by viewModel.sender.collectAsState()
     val textReceiverFieldValue by viewModel.receiver.collectAsState()
 
-    AlertDialog(
+    var loading by remember {
+        mutableStateOf(true)
+    }
+    var addedChainUsers by remember {
+        mutableStateOf<QuerySnapshot?>(null)
+    }
+    var expand by remember {
+        mutableStateOf(false)
+    }
+        AlertDialog(
             onDismissRequest = onClose,
             modifier = Modifier
                 .size(300.dp)
                 .background(Color.White, shape = RoundedCornerShape(12.dp))
 
         ) {
+            if (loading){
+                try {
+                    FirebaseFirestore.getInstance()
+                        .collection(FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
+                            it.uppercase()
+                        })
+                        .document(FirebaseAuth.getInstance().currentUser?.email.toString())
+                        .collection("ChainUsers")
+                        .get().addOnSuccessListener { result ->
+                            addedChainUsers= result
+                            Log.e(TAG, "listToShow: $addedChainUsers")
+                        }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error fetching data for chainusers: $e")
+                }finally {
+                    loading = false
+                }
+            }else{
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -285,9 +342,11 @@ fun ShowStatusDialog(
                     label = { Text(text = "Sender") },
                     value = textSenderFieldValue,
                     onValueChange = { viewModel.updateSenderTextFieldValue(it) },
+                    readOnly = true
 
                     )
                 val context = LocalContext.current
+
                 OutlinedTextField(
                     label = { Text(text = "Receiver") },
                     value = textReceiverFieldValue,
@@ -299,8 +358,38 @@ fun ShowStatusDialog(
                     modifier = Modifier
                         .onFocusChanged {
                             viewModel.isKeyBoardActive.value = it.hasFocus == true
+                        },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                            expand = !expand
+                            keyboardController?.hide()
+                        }) {
+                            Icon(
+                                imageVector = if (expand){Icons.Filled.Remove}else{Icons.Filled.Add},
+                                contentDescription = "Person"
+                            )
                         }
+                    }
                 )
+
+                DropdownMenu(expanded = expand,
+                    onDismissRequest = { /*TODO*/ },
+                    offset = DpOffset.Zero,
+                    properties = PopupProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+                ) {
+                    addedChainUsers?.documents?.forEach {
+                        DropdownMenuItem(
+                            onClick = {
+                                expand = false
+                                viewModel.updateReceiverTextFieldValue(it.get("email").toString())
+                            },
+                            text = {
+                                Text(text = it.id)
+                            }
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(15.dp))
 
@@ -310,22 +399,28 @@ fun ShowStatusDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
 
-                    ElevatedButton(onClick = {
+                    ElevatedButton(
+                        onClick = {
                         viewModel.submitChangeDialogue.value = false
                         keyboardController?.hide()
                         viewModel.isKeyBoardActive.value = false
-                    }) {
+                    },
+                        modifier = Modifier.fillMaxWidth().weight(1f)
+
+                    ) {
                         Text(text = "Close")
                     }
 
                     ElevatedButton(
                         onClick = {
-                        viewModel.events(
-                            updateScreenEvents = UpdateScreenEvents.Post
-                        )
+                            viewModel.events(
+                                updateScreenEvents = UpdateScreenEvents.Post
+                            )
                             viewModel.submitChangeDialogue.value = false
-                        keyboardController?.hide()
-                    }) {
+                            keyboardController?.hide()
+                        },
+                        modifier = Modifier.fillMaxWidth().weight(1f)
+                    ) {
                         Text(text = "Submit")
                     }
 
@@ -333,4 +428,10 @@ fun ShowStatusDialog(
             }
         }
     }
+
+
+
+    }
+
+
 

@@ -1,31 +1,36 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.updatemedicine
 
 import android.content.ContentValues
+import android.icu.util.Calendar
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
-import com.example.myapplication.blockchainapp.data.blockchianapi.url
+import com.example.myapplication.blockchainapp.data.blockchianapi.address
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.example.myapplication.blockchainapp.data.dto.MedicineId
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.text.SimpleDateFormat
+import java.util.Date
 
 class UpdateMedicineViewModel : ViewModel() {
-    private val _id = MutableStateFlow("")
+    private val _id = MutableStateFlow("1")
     val id = _id.asStateFlow()
 
     fun updateTextFieldValue(newValue: String) {
         _id.value = newValue
     }
 
-    private val _sender = MutableStateFlow("")
+    private val _sender = MutableStateFlow("${FirebaseAuth.getInstance().currentUser?.email}")
     val sender = _sender.asStateFlow()
 
     fun updateSenderTextFieldValue(newValue: String) {
@@ -62,14 +67,14 @@ class UpdateMedicineViewModel : ViewModel() {
         _oneMedicineData.value = value
     }
 
-    val gson = GsonBuilder()
+    private val gson: Gson = GsonBuilder()
         .setLenient()
         .serializeNulls()
         .create()
 
     // Build Retrofit with the custom Gson instance
-    val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(url)
+    private val retrofit: Retrofit = Retrofit.Builder()
+        .baseUrl(address)
         .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
 
@@ -148,37 +153,37 @@ class UpdateMedicineViewModel : ViewModel() {
                 changeConfirmDialogue.value = true
             } finally {
                 Log.e("Retrofit Finally: ${_loading.value}", "${_oneMedicineData.value}")
-                getForUpdate(retrofit = retrofit)
-                updateLoadingState(false)
-            }
-        }
-    }
-    fun getChainUsers(userEmail: String): MutableList<ChainUser> {
-
-        val db = FirebaseFirestore.getInstance()
+                try {
+                    val currentTime = Date().time
+                    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                    val formattedDate = formatter.format(currentTime)
 
 
-        val userCollection = db.collection("Manufacturer")
+                    val message = "Transferred ownership of ${oneMedicineData.value!!.ID} from ${sender.value} to ${receiver.value} on $formattedDate"
 
+                    val data = hashMapOf(
+                        "message" to message,
+                    )
+                    FirebaseFirestore.getInstance()
+                        .collection(FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
+                            it.uppercase()
+                        })
+                        .document("${FirebaseAuth.getInstance().currentUser?.email}")
+                        .collection("Messages")
+                        .add(data).addOnSuccessListener { result ->
+                            Log.e(ContentValues.TAG, "listToShow: $result")
+                        }.addOnFailureListener {
 
-        val chainUsersCollection = userCollection.document(userEmail).collection("ChainUsers")
+                        }
+                } catch (e: Exception) {
+                    Log.e(ContentValues.TAG, "Error saving message: $e")
+                }finally {
 
-
-        val chainUsers = chainUsersCollection.get()
-
-
-        val addedChainUsers = mutableListOf<ChainUser>()
-        chainUsers.addOnSuccessListener { result ->
-            for (document in result.documents) {
-                val chainUser = document.toObject(ChainUser::class.java)
-                if (chainUser != null) {
-                    addedChainUsers.add(chainUser)
+                    getForUpdate(retrofit = retrofit)
+                    updateLoadingState(false)
                 }
+
             }
         }
-
-// Return the list of chain users
-        return addedChainUsers
     }
 }
-data class ChainUser(val email : String)

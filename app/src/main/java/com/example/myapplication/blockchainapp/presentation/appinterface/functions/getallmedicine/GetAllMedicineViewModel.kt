@@ -5,7 +5,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
-import com.example.myapplication.blockchainapp.data.blockchianapi.url
+import com.example.myapplication.blockchainapp.data.blockchianapi.address
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +30,7 @@ class GetAllMedicineViewModel : ViewModel() {
         when (getAllScreenEvents) {
             is GetAllScreenEvents.GetAll -> {
                 val retrofit = Retrofit.Builder()
-                    .baseUrl(url)
+                    .baseUrl(address)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 getAll(retrofit, allMedicineData)
