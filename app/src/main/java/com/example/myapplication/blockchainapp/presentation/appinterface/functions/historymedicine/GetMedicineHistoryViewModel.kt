@@ -1,5 +1,6 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.historymedicine
 
+import android.content.ContentValues
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,8 @@ import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
 import com.example.myapplication.blockchainapp.data.blockchianapi.address
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.example.myapplication.blockchainapp.data.dto.MedicineId
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +20,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class GetMedicineHistoryViewModel :ViewModel() {
+    private val _checked = MutableStateFlow(false)
+    val checked = _checked.asStateFlow()
 
     private val _id = MutableStateFlow("")
     val id = _id.asStateFlow()
@@ -52,8 +57,6 @@ class GetMedicineHistoryViewModel :ViewModel() {
     fun updateBarState(newValue: String) {
         _bar.value = newValue
     }
-
-    var authenticityPercentage by mutableStateOf(0)
 
     var button by mutableStateOf(false)
 
@@ -94,6 +97,7 @@ class GetMedicineHistoryViewModel :ViewModel() {
                 previousId.value = _id.value
 
                 allMedicineData.value = medicineData
+                allMedicineData.value=allMedicineData.value.reversed()
                 Log.e("Retrofit : ", medicineData.size.toString())
             } catch (e: Exception) {
                 Log.e("Retrofit Fail :", e.message.toString())
@@ -104,10 +108,8 @@ class GetMedicineHistoryViewModel :ViewModel() {
                 updateLoadingState(false)
                 if (authenticityScore.value==0 || previousId.value!=_id.value){
                     _authenticityScore.value = 0
-                    val medicine = allMedicineData.value.lastOrNull()
-                    if (medicine != null) {
-                        authenticateMedicine(medicine = medicine)
-                    }
+                    val medicine = allMedicineData.value.first()
+                    authenticateMedicine(medicine = medicine)
                 }
 
 
@@ -153,7 +155,7 @@ class GetMedicineHistoryViewModel :ViewModel() {
     }
 
     fun finalCheck(medicine: Medicine): Int {
-        if (allMedicineData.value.size<8){
+        if (allMedicineData.value.size<4){
             updateAuthenticityScoreState(15)
         }
         var isFakeData = false
@@ -176,6 +178,29 @@ class GetMedicineHistoryViewModel :ViewModel() {
         } else {
             // Add 20 points to a new variable (e.g., "points")
            updateAuthenticityScoreState(20)
+            if (authenticityScore.value < 60 && !checked.value){
+                try {
+                    val message = "The Medicine ${medicine.ID} failed authentication with score ${authenticityScore.value}"
+
+                    val fail = hashMapOf(
+                        "message" to message,
+                    )
+                    FirebaseFirestore.getInstance()
+                        .collection("Failed-Auth")
+                        .document(medicine.SenderId)
+                        .collection("Failed")
+                        .document()
+                        .set(fail)
+                        .addOnSuccessListener { result ->
+                            Log.e(ContentValues.TAG, "listToShow: $result")
+                        }
+                    _checked.value = true
+
+                }catch (e:Exception){
+                    e.printStackTrace()
+                }
+            }
+
         }
         Log.e("", "finalCheck: ${authenticityScore.value}", )
         return authenticityScore.value

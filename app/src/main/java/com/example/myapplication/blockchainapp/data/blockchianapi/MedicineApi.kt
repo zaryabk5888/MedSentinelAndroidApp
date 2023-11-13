@@ -27,4 +27,7 @@ interface MedicineApi {
 
     @POST("update")
     suspend fun updateMedicine(@Body data: Medicine)
+
+    @POST("journey")
+    suspend fun updateMedicineJourney(@Body data: MedicineId): List<Medicine>
 }

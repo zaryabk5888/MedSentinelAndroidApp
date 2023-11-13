@@ -21,5 +21,7 @@ sealed class Screen(val route : String){
 
     object Transaction : Screen("Transaction")
 
+    object FailedAuth : Screen("Failed")
+
 
 }

@@ -171,15 +171,12 @@ fun GetMedicineHistoryScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-
                         ElevatedButton(
                             onClick = {
                                 getMedicineHistoryViewModel.updateTextFieldValue(newValue = "")
                                 getMedicineHistoryViewModel.allMedicineData.value = emptyList()
                                 getMedicineHistoryViewModel.button = false
                                 getMedicineHistoryViewModel.clearAuthenticityScoreState()
-
-
                             },
                             modifier = Modifier.weight(1f),
 
@@ -205,13 +202,7 @@ fun GetMedicineHistoryScreen(
                         )
                     }
                     // Display authenticity percentage
-                    Text(
-                        text = "Authenticity Percentage: ${authenticityScore}%",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.Black,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+
                     Spacer(modifier = Modifier.height(10.dp))
 
                     if (loading) {
@@ -245,6 +236,7 @@ fun GetMedicineHistoryScreen(
                                     Text(text = "Show Score")
                                 }
                                 Spacer(modifier = Modifier.height(10.dp))
+
                                 getMedicineHistoryViewModel.allMedicineData.value.forEach { medicine ->
                                     EachHistoryRecord(medicine = medicine)
                                 }
@@ -282,7 +274,8 @@ fun ShowScoreDialog(
     AlertDialog(
         onDismissRequest = onClose,
         modifier = Modifier
-            .size(200.dp)
+            .height(200.dp)
+            .width(300.dp)
             .background(Color.White, shape = RoundedCornerShape(12.dp))
 
     ) {
@@ -302,8 +295,17 @@ fun ShowScoreDialog(
                 color = Color.Black,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
-            Spacer(modifier = Modifier.height(15.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
+            if(authenticityScore <= 60){
+                Text(
+                    text = "Authenticity Failed and Message sent to the Manufacturer",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = Color.Black,
+                )
+            }
+            Spacer(modifier = Modifier.height(15.dp))
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,

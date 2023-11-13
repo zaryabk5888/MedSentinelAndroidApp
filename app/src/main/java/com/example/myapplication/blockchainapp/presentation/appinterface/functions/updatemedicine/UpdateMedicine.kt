@@ -208,7 +208,11 @@ fun UpdateMedicineScreen(
                         }
                         ElevatedButton(
                             onClick = {
-                                if(updateMedicineViewModel.oneMedicineData.value?.ReceiverId == updateMedicineViewModel.sender.value){ //
+                                if(
+                                    updateMedicineViewModel.oneMedicineData.value?.ReceiverId == updateMedicineViewModel.sender.value
+                                    &&
+                                    updateMedicineViewModel.oneMedicineData.value?.JourneyCompleted == "false")
+                                { //
                                     Log.e(
                                         TAG,
                                         "UpdateMedicineScreen receiver: ${updateMedicineViewModel.oneMedicineData.value!!.ReceiverId}",
@@ -312,20 +316,28 @@ fun ShowStatusDialog(
             modifier = Modifier
                 .size(300.dp)
                 .background(Color.White, shape = RoundedCornerShape(12.dp))
-
         ) {
             if (loading){
                 try {
-                    FirebaseFirestore.getInstance()
-                        .collection(FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
-                            it.uppercase()
-                        })
-                        .document(FirebaseAuth.getInstance().currentUser?.email.toString())
-                        .collection("ChainUsers")
-                        .get().addOnSuccessListener { result ->
-                            addedChainUsers= result
-                            Log.e(TAG, "listToShow: $addedChainUsers")
-                        }
+                    if (FirebaseAuth.getInstance().currentUser?.displayName.toString() != "retailer"){
+                        FirebaseFirestore.getInstance()
+                            .collection(FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
+                                it.uppercase()
+                            })
+                            .document(FirebaseAuth.getInstance().currentUser?.email.toString())
+                            .collection("ChainUsers")
+                            .get().addOnSuccessListener { result ->
+                                addedChainUsers= result
+                                Log.e(TAG, "listToShow: $addedChainUsers")
+                            }
+                    }else{
+                        FirebaseFirestore.getInstance()
+                            .collection("Customer")
+                            .get().addOnSuccessListener { result ->
+                                addedChainUsers= result
+                                Log.e(TAG, "listToShow: $addedChainUsers")
+                            }
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error fetching data for chainusers: $e")
                 }finally {
@@ -373,7 +385,8 @@ fun ShowStatusDialog(
                     }
                 )
 
-                DropdownMenu(expanded = expand,
+                DropdownMenu(
+                    expanded = expand,
                     onDismissRequest = { /*TODO*/ },
                     offset = DpOffset.Zero,
                     properties = PopupProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
@@ -398,7 +411,6 @@ fun ShowStatusDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-
                     ElevatedButton(
                         onClick = {
                         viewModel.submitChangeDialogue.value = false
@@ -410,7 +422,6 @@ fun ShowStatusDialog(
                     ) {
                         Text(text = "Close")
                     }
-
                     ElevatedButton(
                         onClick = {
                             viewModel.events(

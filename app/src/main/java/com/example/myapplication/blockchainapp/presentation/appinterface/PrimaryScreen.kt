@@ -303,6 +303,20 @@ fun AllUsersScreen(navController: NavHostController) {
                 color = Color.Black
             )
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        TextButton(
+            onClick = { navController.navigate(Screen.FailedAuth.route) },
+            modifier = Modifier
+                .clip(shape = RoundedCornerShape(4.dp))
+        ) {
+            Text(
+                text = "Failed Authentication Record",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                fontStyle = FontStyle.Italic,
+                color = Color.Black
+            )
+        }
     }
 }
 

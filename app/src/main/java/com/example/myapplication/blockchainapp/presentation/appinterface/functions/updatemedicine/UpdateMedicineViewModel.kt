@@ -126,24 +126,46 @@ class UpdateMedicineViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val medicineApiService = retrofit.create(MedicineApi::class.java)
-                val response = medicineApiService.updateMedicine(
-                    data = Medicine(
-                        ID = oneMedicineData.value!!.ID,
-                        Name = oneMedicineData.value!!.Name,
-                        Manufacturer = oneMedicineData.value!!.Manufacturer,
-                        ManufactureDate = oneMedicineData.value!!.ManufactureDate,
-                        ExpiryDate = oneMedicineData.value!!.ExpiryDate,
-                        BrandName = oneMedicineData.value!!.BrandName,
-                        Composition = oneMedicineData.value!!.Composition,
-                        SenderId = _sender.value,
-                        ReceiverId = _receiver.value,
-                        DrapNo = oneMedicineData.value!!.DrapNo,
-                        DosageForm = oneMedicineData.value!!.DosageForm,
-                        TimeStamp = oneMedicineData.value!!.TimeStamp,
-                        Batch_No = oneMedicineData.value!!.Batch_No,
-                        JourneyCompleted = "false"
+                if (FirebaseAuth.getInstance().currentUser?.displayName == "retailer"){
+                    val response = medicineApiService.updateMedicine(
+                        data = Medicine(
+                            ID = oneMedicineData.value!!.ID,
+                            Name = oneMedicineData.value!!.Name,
+                            Manufacturer = oneMedicineData.value!!.Manufacturer,
+                            ManufactureDate = oneMedicineData.value!!.ManufactureDate,
+                            ExpiryDate = oneMedicineData.value!!.ExpiryDate,
+                            BrandName = oneMedicineData.value!!.BrandName,
+                            Composition = oneMedicineData.value!!.Composition,
+                            SenderId = _sender.value,
+                            ReceiverId = _receiver.value,
+                            DrapNo = oneMedicineData.value!!.DrapNo,
+                            DosageForm = oneMedicineData.value!!.DosageForm,
+                            TimeStamp = oneMedicineData.value!!.TimeStamp,
+                            Batch_No = oneMedicineData.value!!.Batch_No,
+                            JourneyCompleted = "true"
+                        )
                     )
-                )
+                }else{
+                    val response = medicineApiService.updateMedicine(
+                        data = Medicine(
+                            ID = oneMedicineData.value!!.ID,
+                            Name = oneMedicineData.value!!.Name,
+                            Manufacturer = oneMedicineData.value!!.Manufacturer,
+                            ManufactureDate = oneMedicineData.value!!.ManufactureDate,
+                            ExpiryDate = oneMedicineData.value!!.ExpiryDate,
+                            BrandName = oneMedicineData.value!!.BrandName,
+                            Composition = oneMedicineData.value!!.Composition,
+                            SenderId = _sender.value,
+                            ReceiverId = _receiver.value,
+                            DrapNo = oneMedicineData.value!!.DrapNo,
+                            DosageForm = oneMedicineData.value!!.DosageForm,
+                            TimeStamp = oneMedicineData.value!!.TimeStamp,
+                            Batch_No = oneMedicineData.value!!.Batch_No,
+                            JourneyCompleted = "false"
+                        )
+                    )
+                }
+
                 success.value = true
                 changeConfirmDialogue.value = true
             } catch (e: Exception) {
@@ -165,20 +187,21 @@ class UpdateMedicineViewModel : ViewModel() {
                         "message" to message,
                     )
                     FirebaseFirestore.getInstance()
-                        .collection(FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
+                        .collection(
+                            FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
                             it.uppercase()
-                        })
+                        }
+                        )
                         .document("${FirebaseAuth.getInstance().currentUser?.email}")
                         .collection("Messages")
                         .add(data).addOnSuccessListener { result ->
                             Log.e(ContentValues.TAG, "listToShow: $result")
-                        }.addOnFailureListener {
-
+                        }.addOnCompleteListener {
+                            
                         }
                 } catch (e: Exception) {
                     Log.e(ContentValues.TAG, "Error saving message: $e")
                 }finally {
-
                     getForUpdate(retrofit = retrofit)
                     updateLoadingState(false)
                 }

@@ -23,6 +23,7 @@ import com.example.myapplication.blockchainapp.presentation.signup.type.Manufact
 import com.example.myapplication.blockchainapp.presentation.signup.type.Retailer
 
 import com.example.myapplication.blockchainapp.presentation.users.ChainUsers
+import com.example.myapplication.blockchainapp.presentation.users.FailedAuth
 import com.example.myapplication.blockchainapp.presentation.users.TransactionData
 
 
@@ -81,6 +82,9 @@ fun Navigation() {
         }
         composable(Screen.Transaction.route) {
             TransactionData(navController = navController)
+        }
+        composable(Screen.FailedAuth.route) {
+            FailedAuth(navController = navController)
         }
     }
 }
