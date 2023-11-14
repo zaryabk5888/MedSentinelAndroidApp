@@ -167,7 +167,7 @@ fun GetMedicineHistoryScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = "Check Authenticity",
+                                text = "Show History",
                                 fontWeight = FontWeight.Bold
                             )
                         }

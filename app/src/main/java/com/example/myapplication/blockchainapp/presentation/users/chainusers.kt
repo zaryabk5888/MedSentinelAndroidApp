@@ -214,11 +214,11 @@ fun ListDesignForChainUsers(record: DocumentSnapshot) {
                 modifier = Modifier.weight(1f)
             )
 
-            // Add your IconButton for sending friend request here
+            // Add your IconButton for removing user here
             IconButton(
                 onClick = {
                     // Handle friend request action
-                 //   addUser(record,context)
+                 //   removeUser(record,context)
                 }
             ) {
                 // Add your icon for sending friend request here

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
 import com.example.myapplication.blockchainapp.data.blockchianapi.address
 import com.example.myapplication.blockchainapp.data.dto.Medicine
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -37,7 +38,7 @@ class PostMedicineViewModel  : ViewModel() {
     var drapNo = mutableStateOf("")
     var expiryDate = mutableStateOf("")
     var manufacturedDate = mutableStateOf("")
-    var senderId = mutableStateOf("")
+    var senderId = mutableStateOf("${FirebaseAuth.getInstance().currentUser?.email}")
     var receiverId = mutableStateOf("")
     var batch_no = mutableStateOf("")
 

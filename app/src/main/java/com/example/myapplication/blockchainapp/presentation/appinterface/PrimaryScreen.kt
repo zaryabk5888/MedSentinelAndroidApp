@@ -67,11 +67,21 @@ fun PrimaryScreen(navController: NavHostController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutines = rememberCoroutineScope()
     Surface(
-        color = MaterialTheme.colorScheme.background
+
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(title = { Text(text = "${FirebaseAuth.getInstance().currentUser?.displayName}") },
+                TopAppBar(
+                    title = {
+                    Text(
+                        text = "${FirebaseAuth.getInstance().currentUser?.displayName}",
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontStyle = FontStyle.Italic,
+                        color = Color.Black
+
+                    )
+                            },
                     actions = {
                         IconButton(
                             onClick = {
@@ -82,7 +92,7 @@ fun PrimaryScreen(navController: NavHostController) {
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = "Go Back"
+                                contentDescription = "Log out"
                             )
                         }
                     },
@@ -102,7 +112,8 @@ fun PrimaryScreen(navController: NavHostController) {
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.List,
-                                contentDescription = "Menu"
+                                contentDescription = "Menu",
+                                tint = Color.Black
                             )
                         }
                     },
@@ -262,61 +273,68 @@ fun PrimaryScreen(navController: NavHostController) {
 fun AllUsersScreen(navController: NavHostController) {
     Column(modifier = Modifier.fillMaxSize()
     ) {
-        TextButton(
-            onClick = { navController.navigate(Screen.AllUsersScreen.route) },
-            modifier = Modifier
-                .clip(shape = RoundedCornerShape(4.dp))
-        ) {
-            Text(
-                text = "Add User",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontStyle = FontStyle.Italic,
-                color = Color.Black
+        if (FirebaseAuth.getInstance().currentUser?.displayName !="customer"){
+            TextButton(
+                onClick = { navController.navigate(Screen.AllUsersScreen.route) },
+                modifier = Modifier
+                    .clip(shape = RoundedCornerShape(4.dp))
+            ) {
+                Text(
+                    text = "Add User",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Italic,
+                    color = Color.Black
                 )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(
+                onClick = { navController.navigate(Screen.ChainUsersScreen.route) },
+                modifier = Modifier
+                    .clip(shape = RoundedCornerShape(4.dp))
+            ) {
+                Text(
+                    text = "Chain User",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Italic,
+                    color = Color.Black
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            TextButton(
+                onClick = { navController.navigate(Screen.Transaction.route) },
+                modifier = Modifier
+                    .clip(shape = RoundedCornerShape(4.dp))
+            ) {
+                Text(
+                    text = "Transaction Record",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Italic,
+                    color = Color.Black
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            if (FirebaseAuth.getInstance().currentUser?.displayName == "manufacturer"){
+                TextButton(
+                    onClick = { navController.navigate(Screen.FailedAuth.route) },
+                    modifier = Modifier
+                        .clip(shape = RoundedCornerShape(4.dp))
+                ) {
+                    Text(
+                        text = "Failed Authentication Record",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontStyle = FontStyle.Italic,
+                        color = Color.Black
+                    )
+                }
+            }
+
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        TextButton(
-            onClick = { navController.navigate(Screen.ChainUsersScreen.route) },
-            modifier = Modifier
-                .clip(shape = RoundedCornerShape(4.dp))
-        ) {
-            Text(
-                text = "Chain User",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontStyle = FontStyle.Italic,
-                color = Color.Black
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        TextButton(
-            onClick = { navController.navigate(Screen.Transaction.route) },
-            modifier = Modifier
-                .clip(shape = RoundedCornerShape(4.dp))
-        ) {
-            Text(
-                text = "Transaction Record",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontStyle = FontStyle.Italic,
-                color = Color.Black
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        TextButton(
-            onClick = { navController.navigate(Screen.FailedAuth.route) },
-            modifier = Modifier
-                .clip(shape = RoundedCornerShape(4.dp))
-        ) {
-            Text(
-                text = "Failed Authentication Record",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                fontStyle = FontStyle.Italic,
-                color = Color.Black
-            )
-        }
+
+
     }
 }
 

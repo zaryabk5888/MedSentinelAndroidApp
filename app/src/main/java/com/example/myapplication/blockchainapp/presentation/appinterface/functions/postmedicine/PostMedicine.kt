@@ -1,12 +1,23 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.postmedicine
 
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -14,6 +25,8 @@ import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
@@ -22,16 +35,20 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,6 +70,8 @@ fun PostMedicineScreen(
     val datePicker = rememberDatePickerState()
 
     val loading by postMedicineViewModel.loading.collectAsState()
+
+    val context = LocalContext.current
 
 
     Scaffold(
@@ -79,34 +98,41 @@ fun PostMedicineScreen(
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                OutlinedCard(
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    modifier = Modifier.fillMaxWidth()
+                Card(
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardColors(
+                        containerColor = Color.White.copy(alpha = 1f),
+                        contentColor = Color.White.copy(alpha = 1f),
+                        disabledContainerColor = Color.Blue.copy(alpha = 1f),
+                        disabledContentColor = Color.Blue.copy(alpha = 1f)
+                    )
                 ) {
                     Column(
                         modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxSize()
+                            .padding(16.dp)
+                            .fillMaxSize()
                     ) {
                         Text(
-                            text = "Add Medicine Data",
+                            text = "New Medicine Data",
                             fontSize = 20.sp,
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally),
+                            color = Color.Black
                         )
                         Spacer(modifier = Modifier.height(30.dp))
 
                         Column(
-
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
-
                         ) {
                             // ID field
                             OutlinedTextField(
                                 value = postMedicineViewModel.id.value,
                                 onValueChange = { postMedicineViewModel.id.value = it },
-                                label = { Text(text = "ID") }
+                                label = { Text(text = "ID") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -115,7 +141,8 @@ fun PostMedicineScreen(
                             OutlinedTextField(
                                 value = postMedicineViewModel.batch_no.value,
                                 onValueChange = { postMedicineViewModel.batch_no.value = it },
-                                label = { Text(text = "Batch No") }
+                                label = { Text(text = "Batch No") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -124,7 +151,8 @@ fun PostMedicineScreen(
                             OutlinedTextField(
                                 value = postMedicineViewModel.name.value,
                                 onValueChange = { postMedicineViewModel.name.value = it },
-                                label = { Text(text = "Medicine Name") }
+                                label = { Text(text = "Medicine Name") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -133,28 +161,32 @@ fun PostMedicineScreen(
                             OutlinedTextField(
                                 value = postMedicineViewModel.brand.value,
                                 onValueChange = { postMedicineViewModel.brand.value = it },
-                                label = { Text(text = "Brand") }
+                                label = { Text(text = "Brand") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             // Manufacturer field
                             OutlinedTextField(
                                 value = postMedicineViewModel.manufacturer.value,
                                 onValueChange = { postMedicineViewModel.manufacturer.value = it },
-                                label = { Text(text = "Manufacturer") }
+                                label = { Text(text = "Manufacturer") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             // Composition field
                             OutlinedTextField(
                                 value = postMedicineViewModel.composition.value,
                                 onValueChange = { postMedicineViewModel.composition.value = it },
-                                label = { Text(text = "Composition") }
+                                label = { Text(text = "Composition") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             // Dosage field
                             OutlinedTextField(
                                 value = postMedicineViewModel.dosageForm.value,
                                 onValueChange = { postMedicineViewModel.dosageForm.value = it },
-                                label = { Text(text = "DosageForm") }
+                                label = { Text(text = "DosageForm") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -163,7 +195,8 @@ fun PostMedicineScreen(
                             OutlinedTextField(
                                 value = postMedicineViewModel.drapNo.value,
                                 onValueChange = { postMedicineViewModel.drapNo.value = it },
-                                label = { Text(text = "DrapNo") }
+                                label = { Text(text = "DrapNo") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
 
@@ -185,7 +218,8 @@ fun PostMedicineScreen(
                                             contentDescription = "Manufactured Date"
                                         )
                                     }
-                                }
+                                },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -204,7 +238,9 @@ fun PostMedicineScreen(
                                             contentDescription = "Expiry Date"
                                         )
                                     }
-                                }
+
+                                },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -213,7 +249,9 @@ fun PostMedicineScreen(
                             OutlinedTextField(
                                 value = postMedicineViewModel.senderId.value,
                                 onValueChange = { postMedicineViewModel.senderId.value = it },
-                                label = { Text(text = "Sender Name") }
+                                label = { Text(text = "Sender Name") },
+                                modifier = Modifier.fillMaxWidth(),
+                                readOnly = true
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -222,7 +260,8 @@ fun PostMedicineScreen(
                             OutlinedTextField(
                                 value = postMedicineViewModel.receiverId.value,
                                 onValueChange = { postMedicineViewModel.receiverId.value = it },
-                                label = { Text(text = "Receiver Name") }
+                                label = { Text(text = "Receiver Name") },
+                                modifier = Modifier.fillMaxWidth()
                             )
 
                             Spacer(modifier = Modifier.height(10.dp))
@@ -231,7 +270,8 @@ fun PostMedicineScreen(
                             OutlinedTextField(
                                 value = "false",
                                 onValueChange = {  },
-                                label = { Text(text = "Journey Status") }
+                                label = { Text(text = "Journey Status") },
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
 
@@ -242,12 +282,22 @@ fun PostMedicineScreen(
                         ) {
                             Button(
                                 onClick = {
-                                    postMedicineViewModel.submit.value = true
-                                    postMedicineViewModel.events(
-                                        PostScreenEvents =PostScreenEvents.Add
-                                    )
+                                    if (postMedicineViewModel.id.value.isEmpty()||postMedicineViewModel.name.value.isEmpty()||postMedicineViewModel.batch_no.value.isEmpty()||
+                                        postMedicineViewModel.brand.value.isEmpty()||postMedicineViewModel.manufacturedDate.value.isEmpty()||postMedicineViewModel.expiryDate.value.isEmpty()||
+                                        postMedicineViewModel.senderId.value.isEmpty()||postMedicineViewModel.receiverId.value.isEmpty()||postMedicineViewModel.dosageForm.value.isEmpty()
+                                        ){
+                                        Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT).show()
+                                    }else{
+                                        postMedicineViewModel.submit.value = true
+                                        postMedicineViewModel.events(
+                                            PostScreenEvents =PostScreenEvents.Add
+                                        )
+                                    }
+
                                 },
-                                modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth()
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                                    .fillMaxWidth()
                             ) {
                                 Text(text = "Submit")
                             }
@@ -322,10 +372,18 @@ fun ShowStatusDialog(
 ) {
     AlertDialog(
         onDismissRequest = onClose,
-        modifier = Modifier.size(300.dp).background(Color.White)
+        modifier = Modifier
+            .height(200.dp)
+            .width(300.dp)
+            .background(Color.White)
+            .clip(
+                RoundedCornerShape(4.dp)
+            )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -351,6 +409,7 @@ fun ShowStatusDialog(
         }
     }
 }
+
 
 fun clearAll(postMedicineViewModel: PostMedicineViewModel) {
     postMedicineViewModel.id.value = ""
