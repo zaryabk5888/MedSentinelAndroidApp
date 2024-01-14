@@ -1,9 +1,12 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.historymedicine
 //noinspection UsingMaterialAndMaterial3Libraries
 
+import android.Manifest
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -12,6 +15,9 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,25 +32,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -56,7 +71,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontFamily
@@ -69,12 +88,17 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.myapplication.blockchainapp.data.dto.Medicine
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.gson.Gson
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.delay
 import java.util.concurrent.Executors
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
@@ -150,66 +174,149 @@ fun GetMedicineHistoryScreen(
                         .fillMaxSize()
                         .padding(10.dp)
                         .verticalScroll(rememberScrollState())
+                ) {Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    ElevatedCard(
+                        modifier = Modifier
+                            .weight(0.75f)
+                            .padding(end = 10.dp),
+                        elevation = CardDefaults.elevatedCardElevation(
+                            defaultElevation = 12.dp
+                        )
+
+                    ) {
                         OutlinedTextField(
                             label = { Text(text = "ID") },
                             value = textFieldValue,
                             onValueChange = { getMedicineHistoryViewModel.updateTextFieldValue(it) },
-                            //modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            textStyle = LocalTextStyle.current.copy(color = Color.Black), // Set text color
+                            shape = RoundedCornerShape(8.dp) // Add rounded corners
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
+                    }
 
+                    ElevatedCard(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        shape = CircleShape
+                    ) {
                         IconButton(
                             onClick = {
                                 getMedicineHistoryViewModel.updateCameraState(!cameraOn)
-                            }
+                            },
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .align(alignment = Alignment.CenterHorizontally)
                         ) {
-                            Icon(imageVector = Icons.Filled.Camera, contentDescription = "Qr Code Scan")
-                        }
+                            Icon(
+                                imageVector = Icons.Filled.Camera,
+                                contentDescription = "Qr Code Scan"
 
+                            )
+                        }
                     }
+                }
+
                     if (cameraOn){
-                        //CameraPermissionComposable()
-                        PreviewViewComposable()
+                        CameraPermissionComposable(getMedicineHistoryViewModel)
+                        //PreviewViewComposable()
                     }
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
                     ) {
-                        ElevatedButton(
-                            onClick = {
-                                // Authenticate the medicine
-                                getMedicineHistoryViewModel.events(
-                                    getScreenEvents = GetHistoryScreenEvents.GetHistory
-                                )
-                                keyboardController?.hide()
-                            },
-                            modifier = Modifier.weight(1f)
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                                .clickable {
+                                    // Handle Show History button click
+                                    if (getMedicineHistoryViewModel.id.value.isNotEmpty()) {
+                                        getMedicineHistoryViewModel.allMedicineData.value = emptyList()
+                                        getMedicineHistoryViewModel.events(
+                                            getScreenEvents = GetHistoryScreenEvents.GetHistory
+                                        )
+                                        keyboardController?.hide()
+                                    } else {
+                                        Toast.makeText(context, "Scan or Enter ID", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                            color = Color(0xFF677EFA), // Green color
+                            shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text(
-                                text = "Show History",
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        ElevatedButton(
-                            onClick = {
-                                getMedicineHistoryViewModel.updateTextFieldValue(newValue = "")
-                                getMedicineHistoryViewModel.allMedicineData.value = emptyList()
-                                getMedicineHistoryViewModel.button = false
-                                getMedicineHistoryViewModel.clearAuthenticityScoreState()
-                            },
-                            modifier = Modifier.weight(1f),
-
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                            Text(
-                                text = "Clear ",
-                                fontWeight = FontWeight.Bold
-                            )
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Show History",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp)) // Add some spacing between buttons
+
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                                .clickable {
+                                    // Handle Clear button click
+                                    getMedicineHistoryViewModel.updateTextFieldValue(newValue = "")
+                                    getMedicineHistoryViewModel.allMedicineData.value = emptyList()
+                                    getMedicineHistoryViewModel.snackBarButton = false
+                                    getMedicineHistoryViewModel.clearAuthenticityScoreState()
+                                },
+                            color = Color(0xFF9C6DF1), // Orange color
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Clear",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
                         }
                     }
+
+
 
                     //Dialog to show Success or Failure
                     if (getMedicineHistoryViewModel.submitChangeDialogue.value) {
@@ -265,14 +372,14 @@ fun GetMedicineHistoryScreen(
                                 }
                             }
                         } else {
-                            if (getMedicineHistoryViewModel.button){
+                            if (getMedicineHistoryViewModel.snackBarButton){
                                 LaunchedEffect(Unit) {
                                     snackBarHostState.showSnackbar(
                                         message = "No Medicine By That Id",
                                         actionLabel = "Dismiss",
                                         duration = SnackbarDuration.Short
                                     )
-                                    getMedicineHistoryViewModel.button = false
+                                    getMedicineHistoryViewModel.snackBarButton = false
                                 }
                             }
                         }
@@ -285,22 +392,33 @@ fun GetMedicineHistoryScreen(
 
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowScoreDialog(
     onClose: () -> Unit,
     getMedicineHistoryViewModel: GetMedicineHistoryViewModel,
     authenticityScore: Int,
-    ) {
+) {
+    val animatedPercentage = remember { Animatable(0f) }
+
+    LaunchedEffect(authenticityScore) {
+        animatedPercentage.animateTo(
+            targetValue = authenticityScore.toFloat() / 100,
+            animationSpec = tween(durationMillis = 1500)
+        )
+    }
 
     AlertDialog(
         onDismissRequest = onClose,
         modifier = Modifier
-            .height(200.dp)
+            .height(300.dp)
             .width(300.dp)
-            .background(Color.White, shape = RoundedCornerShape(12.dp))
-
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFF333333), Color(0xFF3981FF))
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
     ) {
         Column(
             modifier = Modifier
@@ -308,45 +426,109 @@ fun ShowScoreDialog(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             // Display authenticity percentage
             Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Authenticity Percentage: ${authenticityScore}%",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = Color.Black,
-                modifier = Modifier.padding(vertical = 8.dp)
+
+            // Custom circular gauge composable with animated rotating needle and styling
+            CircularGauge(
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(vertical = 8.dp),
+                percentage = animatedPercentage.value
             )
+
             Spacer(modifier = Modifier.height(8.dp))
 
-            if(authenticityScore <= 60){
+            Text(
+                text = "Authenticity Percentage: ${((animatedPercentage.value) * 100).toInt()}%",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color.White,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if ((animatedPercentage.value * 100).toInt() <= 60) {
                 Text(
                     text = "Authenticity Failed and Message sent to the Manufacturer",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = Color.Black,
+                    color = Color.White,
                 )
             }
+
             Spacer(modifier = Modifier.height(15.dp))
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-
                 ElevatedButton(
                     onClick = {
-                    getMedicineHistoryViewModel.submitChangeDialogue.value = false
-
-                }) {
+                        getMedicineHistoryViewModel.submitChangeDialogue.value = false
+                    }
+                ) {
                     Text(text = "Close")
                 }
-
             }
         }
     }
 }
+
+@Composable
+fun CircularGauge(modifier: Modifier = Modifier, percentage: Float) {
+    Canvas(
+        modifier = modifier
+    ) {
+        val gaugeBackgroundColor = Color(0xFF4B4B4B)
+        val gaugeColor = Color(0xFFE60B55)
+        val needleColor = Color(0xFFFF6347)
+        val strokeWidth = 20f
+        val startAngle = 135f
+        val sweepAngle = 270f * percentage
+        val needleLength = 170f
+
+        // Draw background gauge
+        drawArc(
+            color = gaugeBackgroundColor,
+            startAngle = startAngle,
+            sweepAngle = 270f,
+            useCenter = false,
+            style = Stroke(strokeWidth)
+        )
+
+        // Draw actual gauge
+        drawArc(
+            color = gaugeColor,
+            startAngle = startAngle,
+            sweepAngle = sweepAngle,
+            useCenter = false,
+            style = Stroke(strokeWidth)
+        )
+
+        // Draw animated needle with glowing effect
+        val needleAngle = startAngle + sweepAngle
+        val needleEndX = center.x + needleLength * cos(needleAngle.toRadians())
+        val needleEndY = center.y + needleLength * sin(needleAngle.toRadians())
+
+        drawLine(
+            color = needleColor,
+            start = center,
+            end = Offset(needleEndX.toFloat(), needleEndY.toFloat()),
+            strokeWidth = strokeWidth / 2,
+            cap = StrokeCap.Round
+        )
+
+        drawCircle(
+            color = needleColor.copy(alpha = 0.5f),
+            center = center,
+            radius = strokeWidth * 1.5f
+        )
+    }
+}
+
+private fun Float.toRadians(): Float = this * Math.PI.toFloat() / 180f
 
 
 
@@ -421,10 +603,55 @@ fun EachHistoryRecord(medicine: Medicine) {
 }
 
 
+
+@androidx.annotation.OptIn(ExperimentalGetImage::class) @OptIn(ExperimentalPermissionsApi::class)
+@Composable
+fun CameraPermissionComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewModel) {
+
+    val context = LocalContext.current
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+    val launchCamera = remember { mutableStateOf(false) }
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission granted, proceed with camera actions
+            true
+        } else {
+            // Handle permission denial
+            false
+        }
+    }
+
+
+Column {
+    Button(onClick = {
+        if (cameraPermissionState.hasPermission) {
+            launchCamera.value = !launchCamera.value
+        } else {
+            launcher.launch(Manifest.permission.CAMERA)
+        }
+    }, modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("Open Camera")
+    }
+    Spacer(modifier = Modifier.height(30.dp))
+    if (launchCamera.value) {
+        getMedicineHistoryViewModel.allMedicineData.value = emptyList()
+        PreviewViewComposable(getMedicineHistoryViewModel)
+    }
+}
+
+}
+
+
+
 class BarcodeAnalyser(
-    val callback: () -> Unit
+    val callback: (Any?) -> Unit
 ) : ImageAnalysis.Analyzer {
-    @androidx.annotation.OptIn(ExperimentalGetImage::class) override fun analyze(imageProxy: ImageProxy) {
+    @androidx.annotation.OptIn(ExperimentalGetImage::class)
+    override fun analyze(imageProxy: ImageProxy) {
+
         val options = BarcodeScannerOptions.Builder()
             .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
             .build()
@@ -436,8 +663,9 @@ class BarcodeAnalyser(
 
             scanner.process(image)
                 .addOnSuccessListener { barcodes ->
-                    if (barcodes.size > 0) {
-                        callback()
+                    if (barcodes.isNotEmpty()) {
+                        val qrCodeData = barcodes[0].displayValue // Assuming there's only one QR code
+                        callback(qrCodeData)
                     }
                 }
                 .addOnFailureListener {
@@ -448,50 +676,85 @@ class BarcodeAnalyser(
         imageProxy.close()
     }
 }
+
 @ExperimentalGetImage
 @Composable
-fun PreviewViewComposable() {
-    AndroidView({ context ->
-        val cameraExecutor = Executors.newSingleThreadExecutor()
-        val previewView = PreviewView(context).also {
-            it.scaleType = PreviewView.ScaleType.FILL_CENTER
+fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewModel) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (getMedicineHistoryViewModel.startQrCodeScanner) {
+            AndroidView(
+                { context ->
+                    val cameraExecutor = Executors.newSingleThreadExecutor()
+                    val previewView = PreviewView(context).also {
+                        it.scaleType = PreviewView.ScaleType.FILL_CENTER
+                    }
+                    val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+                    cameraProviderFuture.addListener({
+                        val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+
+                        val preview = Preview.Builder()
+                            .build()
+                            .also {
+                                it.setSurfaceProvider(previewView.surfaceProvider)
+                            }
+
+
+                        val imageCapture = ImageCapture.Builder().build()
+
+                        val imageAnalyzer = ImageAnalysis.Builder()
+                            .build()
+                            .also {
+                                it.setAnalyzer(cameraExecutor, BarcodeAnalyser { qrcodeData ->
+                                    Toast.makeText(
+                                        context,
+                                        "Barcode found $qrcodeData",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    cameraExecutor.shutdown()
+                                    cameraProvider.unbindAll()
+                                    getMedicineHistoryViewModel.qrCodeData = qrcodeData.toString()
+                                    getMedicineHistoryViewModel.startQrCodeScanner = false
+                                }
+                                )
+                            }
+
+                        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                        try {
+                            // Unbind use cases before rebinding
+                            cameraProvider.unbindAll()
+
+                            // Bind use cases to camera
+                            cameraProvider.bindToLifecycle(
+                                context as ComponentActivity,
+                                cameraSelector,
+                                preview,
+                                imageCapture,
+                                imageAnalyzer
+                            )
+
+                        } catch (exc: Exception) {
+                            Log.e("DEBUG", "Use case binding failed", exc)
+                        }
+                    }, ContextCompat.getMainExecutor(context))
+                    previewView
+                },
+
+                )
+            Spacer(modifier = Modifier.height(30.dp))
         }
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
+        else{
+            if (getMedicineHistoryViewModel.processingQrCodedata){
+                CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+                if (getMedicineHistoryViewModel.qrCodeData.isNotEmpty()){
+                    val jsonQrCodeData = Gson().fromJson(getMedicineHistoryViewModel.qrCodeData, Medicine::class.java)
+                    getMedicineHistoryViewModel.updateTextFieldValue(jsonQrCodeData.ID)
+                    getMedicineHistoryViewModel.processingQrCodedata = !getMedicineHistoryViewModel.processingQrCodedata
+                    getMedicineHistoryViewModel.events(
+                        getScreenEvents = GetHistoryScreenEvents.GetHistory
+                    )
                 }
-
-            val imageCapture = ImageCapture.Builder().build()
-
-            val imageAnalyzer = ImageAnalysis.Builder()
-                .build()
-                .also {
-                    it.setAnalyzer(cameraExecutor, BarcodeAnalyser{
-                        Toast.makeText(context, "Barcode found", Toast.LENGTH_SHORT).show()
-                    })
-                }
-
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-            try {
-                // Unbind use cases before rebinding
-                cameraProvider.unbindAll()
-
-                // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
-                    context as ComponentActivity, cameraSelector, preview, imageCapture, imageAnalyzer)
-
-            } catch(exc: Exception) {
-                Log.e("DEBUG", "Use case binding failed", exc)
             }
-        }, ContextCompat.getMainExecutor(context))
-        previewView
-    },
-        modifier = Modifier
-            .size(width = 250.dp, height = 250.dp))
+        }
+    }
 }

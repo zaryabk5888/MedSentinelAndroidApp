@@ -9,7 +9,6 @@ import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
 import com.example.myapplication.blockchainapp.data.blockchianapi.address
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.example.myapplication.blockchainapp.data.dto.MedicineId
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -23,7 +22,7 @@ class GetMedicineHistoryViewModel :ViewModel() {
     private val _checked = MutableStateFlow(false)
     val checked = _checked.asStateFlow()
 
-    private val _id = MutableStateFlow("")
+    private val _id = MutableStateFlow("1")
     val id = _id.asStateFlow()
 
     fun updateTextFieldValue(newValue: String) {
@@ -58,7 +57,7 @@ class GetMedicineHistoryViewModel :ViewModel() {
         _bar.value = newValue
     }
 
-    var button by mutableStateOf(false)
+    var snackBarButton by mutableStateOf(false)
 
     private val _camerOn = MutableStateFlow(false)
     val cameraOn = _camerOn.asStateFlow()
@@ -70,7 +69,9 @@ class GetMedicineHistoryViewModel :ViewModel() {
     var allMedicineData = mutableStateOf(emptyList<Medicine>())
         private set
 
-
+    var startQrCodeScanner by mutableStateOf(true)
+    var processingQrCodedata by mutableStateOf(true)
+    var qrCodeData by mutableStateOf("")
 
 
     fun events(getScreenEvents: GetHistoryScreenEvents) {
@@ -103,14 +104,16 @@ class GetMedicineHistoryViewModel :ViewModel() {
                 Log.e("Retrofit Fail :", e.message.toString())
             }finally {
                 if (allMedicineData.value.isEmpty()){
-                    button = true
+                    snackBarButton = true
+                }else{
+                    if (authenticityScore.value==0 || previousId.value!=_id.value){
+                        _authenticityScore.value = 0
+                        val medicine = allMedicineData.value.first()
+                        authenticateMedicine(medicine = medicine)
+                    }
                 }
                 updateLoadingState(false)
-                if (authenticityScore.value==0 || previousId.value!=_id.value){
-                    _authenticityScore.value = 0
-                    val medicine = allMedicineData.value.first()
-                    authenticateMedicine(medicine = medicine)
-                }
+
 
 
             }

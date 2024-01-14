@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FirebaseApp.initializeApp(this)
                 MyApplicationTheme {
-                   // MedicineQRCode()
+                   //MedicineQRCode()
                        Navigation()
                 }
             }
