@@ -7,7 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 
-const val address = "http://54.88.241.22:8080/"
+const val address = "http://54.164.127.224:8080/"
 
 interface MedicineApi {
     @GET("medicines")

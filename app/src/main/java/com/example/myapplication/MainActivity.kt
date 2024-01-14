@@ -5,9 +5,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
+import com.example.myapplication.blockchainapp.presentation.appinterface.functions.postmedicine.MedicineQRCode
 import com.example.myapplication.blockchainapp.presentation.navigationcomponent.Navigation
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.google.firebase.FirebaseApp
+import com.google.mlkit.common.sdkinternal.MlKitContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +20,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             FirebaseApp.initializeApp(this)
                 MyApplicationTheme {
-                        Navigation()
+                   // MedicineQRCode()
+                       Navigation()
                 }
             }
     }

@@ -3,6 +3,7 @@ package com.example.myapplication.blockchainapp.presentation.appinterface.functi
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +54,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.myapplication.sampleapp.Medicine
+import com.google.gson.Gson
+import com.simonsickle.compose.barcodes.Barcode
+import com.simonsickle.compose.barcodes.BarcodeType
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDateTime
@@ -435,3 +440,35 @@ fun convertMillisToDate(millis: Long): String {
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     return localDateTime.format(formatter)
 }
+@Composable
+fun MedicineQRCode() {
+    val medicineData = Medicine(
+        ID = "123",
+        Name = "Sample Medicine",
+        Manufacturer = "Sample Manufacturer",
+        ManufactureDate = "2022-01-01",
+        ExpiryDate = "2023-01-01",
+        BrandName = "Sample Brand",
+        Composition = "Sample Composition",
+        SenderId = "Sender123",
+        ReceiverId = "Receiver456",
+        DrapNo = "789",
+        DosageForm = "Tablet",
+        Description = "Sample Description",
+        History = listOf("Event 1", "Event 2", "Event 3")
+    )
+
+    val json = Gson().toJson(medicineData)
+    Column(modifier = Modifier.fillMaxSize()) {
+   Barcode(
+            modifier = Modifier
+                .size(250.dp),  // Adjust size as needed
+            resolutionFactor = 10,  // Optional: Increase resolution
+            type = BarcodeType.QR_CODE,
+            value = json
+        )
+
+    }
+
+}
+

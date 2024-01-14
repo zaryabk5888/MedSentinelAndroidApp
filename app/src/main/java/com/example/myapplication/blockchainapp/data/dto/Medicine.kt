@@ -1,5 +1,6 @@
 package com.example.myapplication.blockchainapp.data.dto
 
+
 data class Medicine(
     val ID: String, //15%
     val Name: String,//5%

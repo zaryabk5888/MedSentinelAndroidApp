@@ -2,13 +2,29 @@ package com.example.myapplication.blockchainapp.presentation.appinterface.functi
 //noinspection UsingMaterialAndMaterial3Libraries
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.camera.core.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -32,10 +48,16 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -64,7 +86,7 @@ fun GetMedicineHistoryScreen(
     navController: NavHostController,
     getMedicineHistoryViewModel: GetMedicineHistoryViewModel = viewModel()
 ) {
-
+    val context = LocalContext.current
 
 
     val textFieldValue by getMedicineHistoryViewModel.id.collectAsState()
@@ -135,7 +157,7 @@ fun GetMedicineHistoryScreen(
                             label = { Text(text = "ID") },
                             value = textFieldValue,
                             onValueChange = { getMedicineHistoryViewModel.updateTextFieldValue(it) },
-                            modifier = Modifier.fillMaxWidth()
+                            //modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.width(10.dp))
 
@@ -149,7 +171,8 @@ fun GetMedicineHistoryScreen(
 
                     }
                     if (cameraOn){
-                        PreviewViewComposable(getMedicineHistoryViewModel)
+                        //CameraPermissionComposable()
+                        PreviewViewComposable()
                     }
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(
@@ -397,69 +420,37 @@ fun EachHistoryRecord(medicine: Medicine) {
     }
 }
 
+
 class BarcodeAnalyser(
     val callback: () -> Unit
 ) : ImageAnalysis.Analyzer {
-    // Store the barcode information in a mutable state variable
-    private val barcodeInfo = mutableStateListOf<Barcode>()
-    @androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
-    override fun  analyze(imageProxy: ImageProxy) {
+    @androidx.annotation.OptIn(ExperimentalGetImage::class) override fun analyze(imageProxy: ImageProxy) {
         val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(
-                Barcode.FORMAT_QR_CODE,
-                Barcode.FORMAT_CODABAR,
-                Barcode.FORMAT_CODE_39,
-                Barcode.FORMAT_CODE_93,
-                Barcode.FORMAT_CODE_128,
-                Barcode.FORMAT_EAN_8,
-                Barcode.FORMAT_EAN_13,
-                Barcode.FORMAT_ITF,
-                Barcode.FORMAT_UPC_A,
-                Barcode.FORMAT_UPC_E,
-            )
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
             .build()
 
         val scanner = BarcodeScanning.getClient(options)
-
         val mediaImage = imageProxy.image
         mediaImage?.let {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+
             scanner.process(image)
                 .addOnSuccessListener { barcodes ->
-                    for (barcode in barcodes) {
-                        logBarcodeInfo(barcode)
-
+                    if (barcodes.size > 0) {
+                        callback()
                     }
-                    barcodeInfo.clear()
-                    barcodeInfo.addAll(barcodes)
-                    callback()
                 }
-                .addOnFailureListener { exception ->
-                    Log.e("BarcodeAnalyser", "Error processing barcode: ${exception.message}", exception)
+                .addOnFailureListener {
+                    // Task failed with an exception
+                    // ...
                 }
         }
         imageProxy.close()
     }
-
-    private fun logBarcodeInfo(barcode: Barcode) {
-        Log.e("BarcodeAnalyser", "value: ${barcode.rawValue}")
-        Log.d("BarcodeAnalyser", "Format: ${barcode.format}")
-        Log.d("BarcodeAnalyser", "Bounding Box: ${barcode.boundingBox}")
-        Log.d("BarcodeAnalyser", "URL: ${barcode.url}")
-        // Log additional properties as needed
-    }
-
-    // Get the stored barcode information
-    fun getBarcodeInfo(): List<Barcode> = barcodeInfo.toList()
 }
-
+@ExperimentalGetImage
 @Composable
-fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewModel) {
-    val barcodeInfo = getMedicineHistoryViewModel.barcodeInfo.collectAsState()
-
-    // Dialog state
-    val showDialog = remember { mutableStateOf(false) }
-
+fun PreviewViewComposable() {
     AndroidView({ context ->
         val cameraExecutor = Executors.newSingleThreadExecutor()
         val previewView = PreviewView(context).also {
@@ -477,14 +468,12 @@ fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewMod
 
             val imageCapture = ImageCapture.Builder().build()
 
-            val barcodeAnalyser = BarcodeAnalyser {
-                showDialog.value = true // Show the dialog when a barcode is found
-            }
-
             val imageAnalyzer = ImageAnalysis.Builder()
                 .build()
                 .also {
-                    it.setAnalyzer(cameraExecutor, barcodeAnalyser)
+                    it.setAnalyzer(cameraExecutor, BarcodeAnalyser{
+                        Toast.makeText(context, "Barcode found", Toast.LENGTH_SHORT).show()
+                    })
                 }
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -497,13 +486,12 @@ fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewMod
                 cameraProvider.bindToLifecycle(
                     context as ComponentActivity, cameraSelector, preview, imageCapture, imageAnalyzer)
 
-            } catch (exc: Exception) {
+            } catch(exc: Exception) {
                 Log.e("DEBUG", "Use case binding failed", exc)
             }
         }, ContextCompat.getMainExecutor(context))
         previewView
     },
         modifier = Modifier
-            .size(width = 250.dp, height = 250.dp)
-    )
+            .size(width = 250.dp, height = 250.dp))
 }

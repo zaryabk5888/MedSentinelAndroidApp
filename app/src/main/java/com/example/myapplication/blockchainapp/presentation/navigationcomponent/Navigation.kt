@@ -32,7 +32,7 @@ import com.example.myapplication.blockchainapp.presentation.users.TransactionDat
 fun Navigation() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.LoginScreen.route,) {
+    NavHost(navController = navController, startDestination = Screen.HistoryScreen.route,) {
         composable(
             route = Screen.LoginScreen.route
         ) {
