@@ -15,8 +15,13 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +45,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MedicalInformation
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,12 +53,15 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -69,6 +78,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -181,12 +191,12 @@ fun GetMedicineHistoryScreen(
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
-                    ElevatedCard(
+                    Card(
                         modifier = Modifier
                             .weight(0.75f)
                             .padding(end = 10.dp),
                         elevation = CardDefaults.elevatedCardElevation(
-                            defaultElevation = 12.dp
+                            defaultElevation = 4.dp
                         )
 
                     ) {
@@ -243,13 +253,20 @@ fun GetMedicineHistoryScreen(
                                 .clickable {
                                     // Handle Show History button click
                                     if (getMedicineHistoryViewModel.id.value.isNotEmpty()) {
-                                        getMedicineHistoryViewModel.allMedicineData.value = emptyList()
+                                        getMedicineHistoryViewModel.allMedicineData.value =
+                                            emptyList()
                                         getMedicineHistoryViewModel.events(
                                             getScreenEvents = GetHistoryScreenEvents.GetHistory
                                         )
                                         keyboardController?.hide()
                                     } else {
-                                        Toast.makeText(context, "Scan or Enter ID", Toast.LENGTH_SHORT).show()
+                                        Toast
+                                            .makeText(
+                                                context,
+                                                "Scan or Enter ID",
+                                                Toast.LENGTH_SHORT
+                                            )
+                                            .show()
                                     }
                                 },
                             color = Color(0xFF677EFA), // Green color
@@ -535,70 +552,101 @@ private fun Float.toRadians(): Float = this * Math.PI.toFloat() / 180f
 
 @Composable
 fun EachHistoryRecord(medicine: Medicine) {
-    val isExpanded = remember {
-        mutableStateOf(false)
-    }
-    Card(
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(12.dp)
-            .clickable { isExpanded.value = !isExpanded.value }
+            .clickable { isExpanded = !isExpanded }
+            .background(
+                brush = Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF64B5F6),
+                        Color(0xFF2196F3)
+                    )
+
+                ) ,shape = RoundedCornerShape(8.dp),
+            ),
+
+
     ) {
         Column(
             modifier = Modifier
+                .fillMaxWidth()
                 .padding(16.dp)
-
         ) {
-          
-            Text(
-                text = "Name : ${medicine.Name}",
-            )  
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                    text = "Journey Status : ${medicine.JourneyCompleted}",
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Batch No : ${medicine.Batch_No}",
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Brand Name : ${medicine.BrandName}",
+            // Section 1: Basic Information
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Medicine Name",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = medicine.Name,
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.MedicalInformation,
+                    contentDescription = null,
+                    tint = Color.Black
                 )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Drap No : ${medicine.DrapNo}",
-                )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "TimeStamp Of transaction : ${medicine.TimeStamp}",
-                )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Dosage Form : ${medicine.DosageForm}",
-                )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Composition : ${medicine.Composition}",
-                )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Manufacture Date : ${medicine.ManufactureDate}",
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Expiry Date : ${medicine.ExpiryDate}",
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Sender ID : ${medicine.SenderId}",
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Receiver ID : ${medicine.ReceiverId}",
-            )
+            }
 
+            // Section 2: Additional Details
+            Spacer(modifier = Modifier.height(16.dp))
+            AnimatedVisibility(visible = isExpanded) {
+                Column {
+                    HorizontalDivider(thickness = 1.dp, color = Color.Black)
+                    LabeledText(label = "Journey Status", value = medicine.JourneyCompleted)
+                    LabeledText(label = "Batch Number", value = medicine.Batch_No)
+                    LabeledText(label = "Brand Name", value = medicine.BrandName)
+                    LabeledText(label = "Drap Number", value = medicine.DrapNo)
+                    LabeledText(label = "Timestamp", value = medicine.TimeStamp)
+                    LabeledText(label = "Dosage Form", value = medicine.DosageForm)
+                    LabeledText(label = "Composition", value = medicine.Composition)
+                    LabeledText(label = "Manufacture Date", value = medicine.ManufactureDate)
+                    LabeledText(label = "Expiry Date", value = medicine.ExpiryDate)
+                    HorizontalDivider(thickness = 1.dp, color = Color.Black)
+                }
+            }
+
+            // Section 3: Transaction IDs
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Transaction IDs",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LabeledText(label = "Sender ID", value = medicine.SenderId)
+            LabeledText(label = "Receiver ID", value = medicine.ReceiverId)
         }
+    }
+}
+
+@Composable
+fun LabeledText(label: String, value: String) {
+    Row {
+        Text(
+            text = "$label:",
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier.width(120.dp)
+        )
+        Text(
+            text = value,
+            color = Color.White
+        )
     }
 }
 
