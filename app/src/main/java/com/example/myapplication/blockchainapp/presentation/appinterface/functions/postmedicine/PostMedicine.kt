@@ -3,7 +3,6 @@ package com.example.myapplication.blockchainapp.presentation.appinterface.functi
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +44,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.myapplication.sampleapp.Medicine
+import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.google.gson.Gson
 import com.simonsickle.compose.barcodes.Barcode
 import com.simonsickle.compose.barcodes.BarcodeType
@@ -77,6 +78,10 @@ fun PostMedicineScreen(
     val loading by postMedicineViewModel.loading.collectAsState()
 
     val context = LocalContext.current
+
+    val generateQrCode = remember {
+        mutableStateOf(false)
+    }
 
 
     Scaffold(
@@ -236,7 +241,8 @@ fun PostMedicineScreen(
                                 label = { Text(text = "Expiry Date") },
                                 trailingIcon = {
                                     IconButton(onClick = {
-                                        postMedicineViewModel.datePickerDialogForExpiry.value = !postMedicineViewModel.datePickerDialogForExpiry.value
+                                        postMedicineViewModel.datePickerDialogForExpiry.value =
+                                            !postMedicineViewModel.datePickerDialogForExpiry.value
                                     }) {
                                         Icon(
                                             imageVector = Icons.Filled.EditCalendar,
@@ -274,28 +280,31 @@ fun PostMedicineScreen(
                             // Journey Status
                             OutlinedTextField(
                                 value = "false",
-                                onValueChange = {  },
+                                onValueChange = { },
                                 label = { Text(text = "Journey Status") },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
 
                         Spacer(modifier = Modifier.height(26.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+                        Column(
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Button(
                                 onClick = {
-                                    if (postMedicineViewModel.id.value.isEmpty()||postMedicineViewModel.name.value.isEmpty()||postMedicineViewModel.batch_no.value.isEmpty()||
-                                        postMedicineViewModel.brand.value.isEmpty()||postMedicineViewModel.manufacturedDate.value.isEmpty()||postMedicineViewModel.expiryDate.value.isEmpty()||
-                                        postMedicineViewModel.senderId.value.isEmpty()||postMedicineViewModel.receiverId.value.isEmpty()||postMedicineViewModel.dosageForm.value.isEmpty()
-                                        ){
-                                        Toast.makeText(context, "Please fill all the fields", Toast.LENGTH_SHORT).show()
-                                    }else{
+                                    if (postMedicineViewModel.id.value.isEmpty() || postMedicineViewModel.name.value.isEmpty() || postMedicineViewModel.batch_no.value.isEmpty() ||
+                                        postMedicineViewModel.brand.value.isEmpty() || postMedicineViewModel.manufacturedDate.value.isEmpty() || postMedicineViewModel.expiryDate.value.isEmpty() ||
+                                        postMedicineViewModel.senderId.value.isEmpty() || postMedicineViewModel.receiverId.value.isEmpty() || postMedicineViewModel.dosageForm.value.isEmpty()
+                                    ) {
+                                        Toast.makeText(
+                                            context,
+                                            "Please fill all the fields",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
                                         postMedicineViewModel.submit.value = true
                                         postMedicineViewModel.events(
-                                            PostScreenEvents =PostScreenEvents.Add
+                                            PostScreenEvents = PostScreenEvents.Add
                                         )
                                     }
 
@@ -306,9 +315,39 @@ fun PostMedicineScreen(
                             ) {
                                 Text(text = "Submit")
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    if (postMedicineViewModel.id.value.isEmpty() || postMedicineViewModel.name.value.isEmpty() || postMedicineViewModel.batch_no.value.isEmpty() ||
+                                        postMedicineViewModel.brand.value.isEmpty() || postMedicineViewModel.manufacturedDate.value.isEmpty() || postMedicineViewModel.expiryDate.value.isEmpty() ||
+                                        postMedicineViewModel.senderId.value.isEmpty() || postMedicineViewModel.receiverId.value.isEmpty() || postMedicineViewModel.dosageForm.value.isEmpty()
+                                    ) {
+                                        Toast.makeText(
+                                            context,
+                                            "Please fill all the fields before generating Qr Code",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        generateQrCode.value = true
+                                    }
+
+                                },
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Text(text = "Generate Qr Code")
+                            }
                         }
                     }
                 }
+                //generate qr code
+                if (generateQrCode.value) {
+                    MedicineQRCode(postMedicineViewModel)
+                }
+
+
+
                 //Dialog to show Success or Failure
                 if (postMedicineViewModel.submit.value) {
                     LaunchedEffect(Unit) {
@@ -441,25 +480,26 @@ fun convertMillisToDate(millis: Long): String {
     return localDateTime.format(formatter)
 }
 @Composable
-fun MedicineQRCode() {
+fun MedicineQRCode(postMedicineViewModel: PostMedicineViewModel) {
     val medicineData = Medicine(
-        ID = "123",
-        Name = "Sample Medicine",
-        Manufacturer = "Sample Manufacturer",
-        ManufactureDate = "2022-01-01",
-        ExpiryDate = "2023-01-01",
-        BrandName = "Sample Brand",
-        Composition = "Sample Composition",
-        SenderId = "Sender123",
-        ReceiverId = "Receiver456",
-        DrapNo = "789",
-        DosageForm = "Tablet",
-        Description = "Sample Description",
-        History = listOf("Event 1", "Event 2", "Event 3")
+        ID = postMedicineViewModel.id.value,
+        Name = postMedicineViewModel.name.value,
+        Manufacturer = postMedicineViewModel.manufacturer.value,
+        ManufactureDate = postMedicineViewModel.manufacturedDate.value,
+        ExpiryDate = postMedicineViewModel.expiryDate.value,
+        BrandName = postMedicineViewModel.brand.value,
+        Composition = postMedicineViewModel.composition.value,
+        SenderId = postMedicineViewModel.senderId.value,
+        ReceiverId = postMedicineViewModel.receiverId.value,
+        DrapNo = postMedicineViewModel.drapNo.value,
+        DosageForm = postMedicineViewModel.dosageForm.value,
+        TimeStamp = postMedicineViewModel.description.value,
+        Batch_No = postMedicineViewModel.batch_no.value,
+        JourneyCompleted = "false"
     )
 
     val json = Gson().toJson(medicineData)
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
    Barcode(
             modifier = Modifier
                 .size(250.dp),  // Adjust size as needed
@@ -467,7 +507,6 @@ fun MedicineQRCode() {
             type = BarcodeType.QR_CODE,
             value = json
         )
-
     }
 
 }

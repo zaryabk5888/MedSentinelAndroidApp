@@ -2,6 +2,7 @@ package com.example.myapplication.blockchainapp.presentation.appinterface.functi
 //noinspection UsingMaterialAndMaterial3Libraries
 
 import android.Manifest
+import android.content.ContentValues.TAG
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -18,10 +19,6 @@ import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,9 +48,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,7 +56,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -253,11 +247,12 @@ fun GetMedicineHistoryScreen(
                                 .clickable {
                                     // Handle Show History button click
                                     if (getMedicineHistoryViewModel.id.value.isNotEmpty()) {
-                                        getMedicineHistoryViewModel.allMedicineData.value =
-                                            emptyList()
+                                        getMedicineHistoryViewModel.allMedicineData.value = emptyList()
                                         getMedicineHistoryViewModel.events(
                                             getScreenEvents = GetHistoryScreenEvents.GetHistory
                                         )
+                                        getMedicineHistoryViewModel.updateTextFieldValue("")
+
                                         keyboardController?.hide()
                                     } else {
                                         Toast
@@ -566,7 +561,8 @@ fun EachHistoryRecord(medicine: Medicine) {
                         Color(0xFF2196F3)
                     )
 
-                ) ,shape = RoundedCornerShape(8.dp),
+                ),
+                shape = RoundedCornerShape(8.dp),
             ),
 
 
@@ -798,9 +794,7 @@ fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewMod
                     val jsonQrCodeData = Gson().fromJson(getMedicineHistoryViewModel.qrCodeData, Medicine::class.java)
                     getMedicineHistoryViewModel.updateTextFieldValue(jsonQrCodeData.ID)
                     getMedicineHistoryViewModel.processingQrCodedata = !getMedicineHistoryViewModel.processingQrCodedata
-                    getMedicineHistoryViewModel.events(
-                        getScreenEvents = GetHistoryScreenEvents.GetHistory
-                    )
+                    Log.e(TAG, "PreviewViewComposable: yes", )
                 }
             }
         }
