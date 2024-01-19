@@ -13,14 +13,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonElevation
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
@@ -43,6 +47,9 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
+import com.simonsickle.compose.barcodes.Barcode
+import com.simonsickle.compose.barcodes.BarcodeType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +60,8 @@ fun GetMedicineScreen(
     val textFieldValue by getMedicineViewModel.id.collectAsState()
     val oneMedicineData by getMedicineViewModel.oneMedicineData.collectAsState()
     val loading by getMedicineViewModel.loading.collectAsState()
+    val json by getMedicineViewModel.json.collectAsState()
+    val loadingQrCode by getMedicineViewModel.loadingQrCode.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val snackBarHostState = SnackbarHostState()
     Surface {
@@ -121,14 +130,14 @@ fun GetMedicineScreen(
                         label = {
                             Text(text = "ID")
                         },
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        modifier = Modifier.fillMaxWidth(),
 
                         )
 
                     Row(
                         modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                     ) {
-                        OutlinedIconButton(
+                        ElevatedButton(
                             onClick = {
                                 getMedicineViewModel.events(
                                     getScreenEvents = GetScreenEvents.GetId
@@ -137,10 +146,11 @@ fun GetMedicineScreen(
                             },
                             modifier = Modifier.weight(1f),
                         ) {
-                            Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
+                            Text(text = "Search")
+                            Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
                         }
 
-                        OutlinedIconButton(
+                        ElevatedButton(
                             onClick = {
                                 getMedicineViewModel.updateTextFieldValue(newValue = "")
                                 getMedicineViewModel.updateMedicineState(value = null)
@@ -149,6 +159,7 @@ fun GetMedicineScreen(
                                 .padding(start = 16.dp)
                                 .weight(1f),
                         ) {
+                            Text(text = "Clear All")
                             Icon(
                                 imageVector = Icons.Filled.DeleteOutline,
                                 contentDescription = "Clear All"
@@ -165,10 +176,7 @@ fun GetMedicineScreen(
                         )
                     } else {
                         if (oneMedicineData != null) {
-                            OutlinedCard(
-                                elevation = CardDefaults.elevatedCardElevation(
-                                    defaultElevation = 4.dp
-                                ),
+                            Card(
                                 modifier = Modifier.padding(16.dp)
                             ) {
 
@@ -224,7 +232,31 @@ fun GetMedicineScreen(
                                     title = "Receiver ID",
                                     value = oneMedicineData!!.ReceiverId
                                 )
+                                //(FirebaseAuth.getInstance().currentUser!!.email.toString() == oneMedicineData!!.SenderId)
+                                if ("manufacturer@gmail.com" == oneMedicineData!!.SenderId)
+                                   {
+                                    Button(
+                                        onClick = {
+                                        getMedicineViewModel.events(
+                                            getScreenEvents = GetScreenEvents.GenerateQrCode
+                                        )
 
+                                    }
+                                    ) {
+                                        Text(text = "Generate Qr Code")
+                                    }
+                                 if (loadingQrCode){
+                                     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                                         Barcode(
+                                             modifier = Modifier
+                                                 .size(250.dp),  // Adjust size as needed
+                                             resolutionFactor = 10,  // Optional: Increase resolution
+                                             type = BarcodeType.QR_CODE,
+                                             value = json!!
+                                         )
+                                     }
+                                 }
+                                }
                             }
                         }else{
                             LaunchedEffect(Unit){
@@ -243,7 +275,7 @@ fun GetMedicineScreen(
 }
 @Composable
 fun MedicationInfoCard(title: String, value: String) {
-    Card(
+    OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),

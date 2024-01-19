@@ -330,6 +330,20 @@ fun AllUsersScreen(navController: NavHostController) {
                         color = Color.Black
                     )
                 }
+
+                TextButton(
+                    onClick = { navController.navigate(Screen.AddedMedicine.route) },
+                    modifier = Modifier
+                        .clip(shape = RoundedCornerShape(4.dp))
+                ) {
+                    Text(
+                        text = "Medicine Data Added",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontStyle = FontStyle.Italic,
+                        color = Color.Black
+                    )
+                }
             }
 
         }

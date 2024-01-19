@@ -2,4 +2,5 @@ package com.example.myapplication.blockchainapp.presentation.appinterface.functi
 
 sealed class GetScreenEvents{
     object GetId:GetScreenEvents()
+    object GenerateQrCode:GetScreenEvents()
 }

@@ -23,5 +23,7 @@ sealed class Screen(val route : String){
 
     object FailedAuth : Screen("Failed")
 
+    object AddedMedicine : Screen("AddedMedicine")
+
 
 }

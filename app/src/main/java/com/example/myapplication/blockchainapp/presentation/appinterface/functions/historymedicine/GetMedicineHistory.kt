@@ -452,7 +452,7 @@ fun ShowScoreDialog(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Authenticity Percentage: ${((animatedPercentage.value) * 100).toInt()}%",
+                text = "Score : ${((animatedPercentage.value) * 100).toInt()}%",
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 color = Color.White,

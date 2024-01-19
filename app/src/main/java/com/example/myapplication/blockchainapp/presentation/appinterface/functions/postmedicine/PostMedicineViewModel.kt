@@ -1,5 +1,6 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.postmedicine
 
+import android.content.ContentValues
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
@@ -8,6 +9,7 @@ import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
 import com.example.myapplication.blockchainapp.data.blockchianapi.address
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -95,7 +97,24 @@ class PostMedicineViewModel  : ViewModel() {
                     medicineData.value = response!!.body().toString()
                     retrofitMessage.value = "Successfully Added Medicine ${id.value}"
                     success.value = true
+                    try {
+                        val medicineID = "${id.value}"
 
+                        val medicine = hashMapOf(
+                            "medicineID" to medicineID,
+                        )
+                        FirebaseFirestore.getInstance()
+                            .collection("Manufacturer")
+                            .document(senderId.value)
+                            .collection("Medicine-Added")
+                            .document()
+                            .set(medicine)
+                            .addOnSuccessListener { result ->
+                                Log.e(ContentValues.TAG, "Success in adding: $result")
+                            }
+                    }catch (e:Exception){
+                        e.printStackTrace()
+                    }
                 } else {
                     Log.e("Retrofit not ok :", response.toString())
                     // Handle error response here

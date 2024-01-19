@@ -24,6 +24,7 @@ import com.example.myapplication.blockchainapp.presentation.signup.type.Retailer
 
 import com.example.myapplication.blockchainapp.presentation.users.ChainUsers
 import com.example.myapplication.blockchainapp.presentation.users.FailedAuth
+import com.example.myapplication.blockchainapp.presentation.users.MedicineAdded
 import com.example.myapplication.blockchainapp.presentation.users.TransactionData
 
 
@@ -32,7 +33,7 @@ import com.example.myapplication.blockchainapp.presentation.users.TransactionDat
 fun Navigation() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.LoginScreen.route,) {
+    NavHost(navController = navController, startDestination = Screen.GetScreen.route,) {
         composable(
             route = Screen.LoginScreen.route
         ) {
@@ -85,6 +86,9 @@ fun Navigation() {
         }
         composable(Screen.FailedAuth.route) {
             FailedAuth(navController = navController)
+        }
+        composable(Screen.AddedMedicine.route) {
+            MedicineAdded(navController = navController)
         }
     }
 }
