@@ -315,35 +315,12 @@ fun PostMedicineScreen(
                             ) {
                                 Text(text = "Submit")
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = {
-                                    if (postMedicineViewModel.id.value.isEmpty() || postMedicineViewModel.name.value.isEmpty() || postMedicineViewModel.batch_no.value.isEmpty() ||
-                                        postMedicineViewModel.brand.value.isEmpty() || postMedicineViewModel.manufacturedDate.value.isEmpty() || postMedicineViewModel.expiryDate.value.isEmpty() ||
-                                        postMedicineViewModel.senderId.value.isEmpty() || postMedicineViewModel.receiverId.value.isEmpty() || postMedicineViewModel.dosageForm.value.isEmpty()
-                                    ) {
-                                        Toast.makeText(
-                                            context,
-                                            "Please fill all the fields before generating Qr Code",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } else {
-                                        generateQrCode.value = true
-                                    }
-
-                                },
-                                modifier = Modifier
-                                    .padding(vertical = 8.dp)
-                                    .fillMaxWidth()
-                            ) {
-                                Text(text = "Generate Qr Code")
-                            }
                         }
                     }
                 }
                 //generate qr code
                 if (generateQrCode.value) {
-                    MedicineQRCode(postMedicineViewModel)
+                    //MedicineQRCode(postMedicineViewModel)
                 }
 
 
@@ -478,36 +455,5 @@ fun convertMillisToDate(millis: Long): String {
     val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     return localDateTime.format(formatter)
-}
-@Composable
-fun MedicineQRCode(postMedicineViewModel: PostMedicineViewModel) {
-    val medicineData = Medicine(
-        ID = postMedicineViewModel.id.value,
-        Name = postMedicineViewModel.name.value,
-        Manufacturer = postMedicineViewModel.manufacturer.value,
-        ManufactureDate = postMedicineViewModel.manufacturedDate.value,
-        ExpiryDate = postMedicineViewModel.expiryDate.value,
-        BrandName = postMedicineViewModel.brand.value,
-        Composition = postMedicineViewModel.composition.value,
-        SenderId = postMedicineViewModel.senderId.value,
-        ReceiverId = postMedicineViewModel.receiverId.value,
-        DrapNo = postMedicineViewModel.drapNo.value,
-        DosageForm = postMedicineViewModel.dosageForm.value,
-        TimeStamp = postMedicineViewModel.description.value,
-        Batch_No = postMedicineViewModel.batch_no.value,
-        JourneyCompleted = "false"
-    )
-
-    val json = Gson().toJson(medicineData)
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-   Barcode(
-            modifier = Modifier
-                .size(250.dp),  // Adjust size as needed
-            resolutionFactor = 10,  // Optional: Increase resolution
-            type = BarcodeType.QR_CODE,
-            value = json
-        )
-    }
-
 }
 

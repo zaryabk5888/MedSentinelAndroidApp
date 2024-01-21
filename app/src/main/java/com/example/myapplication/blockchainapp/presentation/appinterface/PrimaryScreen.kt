@@ -77,7 +77,6 @@ fun PrimaryScreen(navController: NavHostController) {
                         text = "${FirebaseAuth.getInstance().currentUser?.displayName}",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
-                        fontStyle = FontStyle.Italic,
                         color = Color.Black
 
                     )

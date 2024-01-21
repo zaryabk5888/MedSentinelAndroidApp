@@ -9,14 +9,23 @@ import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
 import com.example.myapplication.blockchainapp.data.blockchianapi.address
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.example.myapplication.blockchainapp.data.dto.MedicineId
+import com.google.ai.client.generativeai.GenerativeModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.gson.JsonObject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.Headers
+import retrofit2.http.POST
 
 class GetMedicineHistoryViewModel :ViewModel() {
     private val _checked = MutableStateFlow(false)
@@ -50,6 +59,8 @@ class GetMedicineHistoryViewModel :ViewModel() {
 
     var submitChangeDialogue = mutableStateOf(false)
 
+    var submitAiDialogue = mutableStateOf(false)
+
     private val _bar = MutableStateFlow("")
     val barcodeInfo = _bar.asStateFlow()
 
@@ -73,6 +84,26 @@ class GetMedicineHistoryViewModel :ViewModel() {
     var processingQrCodedata by mutableStateOf(true)
     var qrCodeData by mutableStateOf("")
 
+
+    private val _gpt3Response = MutableStateFlow("")
+    val gpt3Response =_gpt3Response.asStateFlow()
+
+    val generativeModel = GenerativeModel(
+        // Use a model that's applicable for your use case (see "Implement basic use cases" below)
+        modelName = "gemini-pro",
+        // Access your API key as a Build Configuration variable (see "Set up your API key" above)
+        apiKey = "AIzaSyCx-91NHNLhznFldyv1wYTbttL2a3qajyM"
+    )
+
+    fun getGeminiResponse(){
+        viewModelScope.launch {
+            val prompt = "Analyze the history of medicine data that moved in supply chain and the changing value is the sender and receiver " +
+                    "and write a summary of data of medicine history that i am providing = ${allMedicineData.value}."
+            val response = generativeModel.generateContent(prompt)
+            _gpt3Response.value = response.text.toString()
+        }
+
+    }
 
     fun events(getScreenEvents: GetHistoryScreenEvents) {
         when (getScreenEvents) {

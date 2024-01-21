@@ -22,11 +22,14 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +39,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -43,8 +48,10 @@ import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MedicalInformation
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -88,12 +95,15 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.ai.client.generativeai.GenerativeModel
 import com.google.gson.Gson
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -124,6 +134,8 @@ fun GetMedicineHistoryScreen(
     val cameraOn by getMedicineHistoryViewModel.cameraOn.collectAsState()
 
     val authenticityScore by getMedicineHistoryViewModel.authenticityScore.collectAsState()
+
+    val gpt3Response = getMedicineHistoryViewModel.gpt3Response.collectAsState()
 
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -247,7 +259,8 @@ fun GetMedicineHistoryScreen(
                                 .clickable {
                                     // Handle Show History button click
                                     if (getMedicineHistoryViewModel.id.value.isNotEmpty()) {
-                                        getMedicineHistoryViewModel.allMedicineData.value = emptyList()
+                                        getMedicineHistoryViewModel.allMedicineData.value =
+                                            emptyList()
                                         getMedicineHistoryViewModel.events(
                                             getScreenEvents = GetHistoryScreenEvents.GetHistory
                                         )
@@ -263,6 +276,7 @@ fun GetMedicineHistoryScreen(
                                             )
                                             .show()
                                     }
+                                    //
                                 },
                             color = Color(0xFF677EFA), // Green color
                             shape = RoundedCornerShape(8.dp)
@@ -369,14 +383,40 @@ fun GetMedicineHistoryScreen(
 
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
-                                ElevatedButton(
-                                    onClick = {
-                                              getMedicineHistoryViewModel.submitChangeDialogue.value = true
+                                Row (modifier = Modifier.fillMaxWidth()){
+                                    Button(
+                                        onClick = {
+                                            getMedicineHistoryViewModel.submitChangeDialogue.value = true
+                                        },
+                                        modifier = Modifier.weight(0.5f),
+                                        colors = ButtonColors(
+                                            containerColor = Color(0xFF3981FF),
+                                            contentColor = Color.White,
+                                            disabledContentColor = Color.White,
+                                            disabledContainerColor = Color(0xFF3981FF),
+                                        )
+                                    ) {
+                                        Text(text = "Show Score")
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Button(onClick = {
+                                        getMedicineHistoryViewModel.getGeminiResponse()
+                                        getMedicineHistoryViewModel.submitAiDialogue.value = true
                                     },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(text = "Show Score")
+                                        modifier = Modifier.weight(0.5f)
+                                    ) {
+                                        Text(text = "Generate AI Response")
+                                    }
                                 }
+                                if (getMedicineHistoryViewModel.submitAiDialogue.value){
+                                    ShowDialog(
+                                        onClose = {
+                                            getMedicineHistoryViewModel.submitAiDialogue.value = false
+                                        },
+                                        value = gpt3Response.value
+                                    )
+                                }
+
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 getMedicineHistoryViewModel.allMedicineData.value.forEach { medicine ->
@@ -403,6 +443,52 @@ fun GetMedicineHistoryScreen(
         }
 
 }
+@Composable
+fun ShowDialog(
+    onClose: () -> Unit,
+    value: String
+) {
+    val scrollState = rememberScrollState()
+
+    Dialog(
+        onDismissRequest = {
+            onClose()
+        },
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color(0xFF333333), Color(0xFF3981FF))
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .height(400.dp) // Occupy full height
+                .width(300.dp)
+                .verticalScroll(scrollState)
+        ) {
+            Text(
+                text = value,
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = { onClose() },
+                modifier = Modifier
+                    .align(Alignment.End) // Align the button to the left
+            ) {
+                Text(text = "Close")
+            }
+        }
+    }
+}
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -423,8 +509,8 @@ fun ShowScoreDialog(
     AlertDialog(
         onDismissRequest = onClose,
         modifier = Modifier
-            .height(300.dp)
             .width(300.dp)
+            .height(400.dp)
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(Color(0xFF333333), Color(0xFF3981FF))
@@ -469,24 +555,15 @@ fun ShowScoreDialog(
                     color = Color.White,
                 )
             }
-
-            Spacer(modifier = Modifier.height(15.dp))
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                ElevatedButton(
-                    onClick = {
-                        getMedicineHistoryViewModel.submitChangeDialogue.value = false
-                    }
-                ) {
-                    Text(text = "Close")
-                }
+            Button(onClick = {
+                getMedicineHistoryViewModel.submitChangeDialogue.value = false
+            }) {
+                Text(text = "Close")
             }
         }
     }
 }
+
 
 @Composable
 fun CircularGauge(modifier: Modifier = Modifier, percentage: Float) {

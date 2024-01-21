@@ -1,6 +1,7 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.getmedicine
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
@@ -24,6 +25,15 @@ class GetMedicineViewModel :ViewModel() {
 
     private val _id = MutableStateFlow("6")
     val id = _id.asStateFlow()
+
+
+
+    private val _dialogueBoxOpener = MutableStateFlow(false)
+    val dialogueBoxOpener = _dialogueBoxOpener.asStateFlow()
+
+    fun updateDialogueBoxOpenerState(newValue: Boolean) {
+        _dialogueBoxOpener.value = newValue
+    }
 
     fun updateTextFieldValue(newValue: String) {
         _id.value = newValue
