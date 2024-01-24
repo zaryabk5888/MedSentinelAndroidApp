@@ -1,8 +1,15 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.updatemedicine
 
+import android.Manifest
+import android.app.Activity.RESULT_OK
 import android.content.ContentValues.TAG
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -22,14 +30,18 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.autofill.Autofill
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -64,6 +75,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.delay
 
 
+@RequiresApi(Build.VERSION_CODES.M)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UpdateMedicineScreen(
@@ -106,12 +118,31 @@ fun UpdateMedicineScreen(
 
             ) {
 
-                OutlinedTextField(
-                    label = { Text(text = "ID") },
-                    value = textFieldValue,
-                    onValueChange = { updateMedicineViewModel.updateTextFieldValue(it) },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Row(
+
+                ) {
+                    OutlinedTextField(
+                        label = { Text(text = "ID") },
+                        value = textFieldValue,
+                        onValueChange = { updateMedicineViewModel.updateTextFieldValue(it) },
+                        modifier = Modifier.weight(0.75f)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    IconButton(
+                        onClick = {
+
+                        },
+                        modifier = Modifier.weight(0.25f).align(Alignment.CenterVertically)
+                    ) {
+                        Icon(imageVector = Icons.Default.QrCodeScanner, contentDescription = "Scan QR Code")
+                    }
+
+                }
+
+
+
                 Spacer(modifier = Modifier.height(12.dp))
                 Row {
                     ElevatedButton(
@@ -126,6 +157,8 @@ fun UpdateMedicineScreen(
                         Text(text = "Search")
                     }
 
+                    Spacer(modifier = Modifier.width(12.dp))
+
                     ElevatedButton(
                         onClick = {
                             updateMedicineViewModel.updateReceiverTextFieldValue(newValue = "")
@@ -138,6 +171,12 @@ fun UpdateMedicineScreen(
                         Text(text = "Clear")
                     }
                 }
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    thickness = 1.dp,
+                )
 
                 if (loading) {
                     CircularProgressIndicator(
@@ -210,23 +249,28 @@ fun UpdateMedicineScreen(
 
                         ElevatedButton(
                             onClick = {
-                                if(
-                                    updateMedicineViewModel.oneMedicineData.value?.ReceiverId == updateMedicineViewModel.sender.value
-                                    &&
-                                    updateMedicineViewModel.oneMedicineData.value?.JourneyCompleted == "false")
-                                { //
-                                    Log.e(
-                                        TAG,
-                                        "UpdateMedicineScreen receiver: ${updateMedicineViewModel.oneMedicineData.value!!.ReceiverId}",
-                                    )
-                                    Log.e(
-                                        TAG,
-                                        "UpdateMedicineScreen sender: ${updateMedicineViewModel.sender.value}",
-                                    )
-                                    updateMedicineViewModel.submitChangeDialogue.value = !updateMedicineViewModel.submitChangeDialogue.value
+                                //check if user has location permission
+                                if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                    updateMedicineViewModel.getGpsPermissionStatus.value = true
                                 }else{
-                                    Toast.makeText(context,"You are not the owner",
-                                        Toast.LENGTH_SHORT).show()
+                                    if(
+                                        updateMedicineViewModel.oneMedicineData.value?.ReceiverId == updateMedicineViewModel.sender.value
+                                        &&
+                                        updateMedicineViewModel.oneMedicineData.value?.JourneyCompleted == "false")
+                                    { //
+                                        Log.e(
+                                            TAG,
+                                            "UpdateMedicineScreen receiver: ${updateMedicineViewModel.oneMedicineData.value!!.ReceiverId}",
+                                        )
+                                        Log.e(
+                                            TAG,
+                                            "UpdateMedicineScreen sender: ${updateMedicineViewModel.sender.value}",
+                                        )
+                                        updateMedicineViewModel.submitChangeDialogue.value = !updateMedicineViewModel.submitChangeDialogue.value
+                                    }else{
+                                        Toast.makeText(context,"You are not the owner",
+                                            Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             },
                             modifier = Modifier
@@ -235,6 +279,11 @@ fun UpdateMedicineScreen(
                         ) {
                             Text(text = "Change OwnerShip")
                         }
+                        if (updateMedicineViewModel.getGpsPermissionStatus.value){
+                            GpsPermissionAndLocation(updateMedicineViewModel =updateMedicineViewModel)
+                        }
+
+
                         //Dialog to show Success or Failure
                         if (updateMedicineViewModel.submitChangeDialogue.value) {
                             LaunchedEffect(Unit) {
@@ -253,18 +302,22 @@ fun UpdateMedicineScreen(
                             LaunchedEffect(Unit) {
                                 delay(12000) // Wait for 2 seconds
                             }
-                           AlertDialog(onDismissRequest = {
-                               updateMedicineViewModel.changeConfirmDialogue.value = false
-                           }) {
-                               Icon(
-                                   imageVector =
-                                       if (updateMedicineViewModel.success.value) {Icons.Filled.CheckCircle }else{ Icons.Filled.Error},
-                                       contentDescription = "Success",
-                               tint = if (updateMedicineViewModel.success.value) Color.Green else Color.Red,
-                               modifier = Modifier.size(48.dp)
-                                   )
-                               }
-                           }
+                            BasicAlertDialog(onDismissRequest = {
+                                updateMedicineViewModel.changeConfirmDialogue.value = false
+                            }) {
+                                Icon(
+                                    imageVector =
+                                    if (updateMedicineViewModel.success.value) {
+                                        Icons.Filled.CheckCircle
+                                    } else {
+                                        Icons.Filled.Error
+                                    },
+                                    contentDescription = "Success",
+                                    tint = if (updateMedicineViewModel.success.value) Color.Green else Color.Red,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                        }
                         }
                     }
                 }
@@ -313,39 +366,41 @@ fun ShowStatusDialog(
     var expand by remember {
         mutableStateOf(false)
     }
-        AlertDialog(
-            onDismissRequest = onClose,
-            modifier = Modifier
-                .size(300.dp)
-                .background(Color.White, shape = RoundedCornerShape(12.dp))
-        ) {
-            if (loading){
-                try {
-                    if (FirebaseAuth.getInstance().currentUser?.displayName.toString() != "retailer"){
-                        FirebaseFirestore.getInstance()
-                            .collection(FirebaseAuth.getInstance().currentUser?.displayName.toString().replaceFirstChar {
-                                it.uppercase()
-                            })
-                            .document(FirebaseAuth.getInstance().currentUser?.email.toString())
-                            .collection("ChainUsers")
-                            .get().addOnSuccessListener { result ->
-                                addedChainUsers= result
-                                Log.e(TAG, "listToShow: $addedChainUsers")
-                            }
-                    }else{
-                        FirebaseFirestore.getInstance()
-                            .collection("Customer")
-                            .get().addOnSuccessListener { result ->
-                                addedChainUsers= result
-                                Log.e(TAG, "listToShow: $addedChainUsers")
-                            }
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error fetching data for chainusers: $e")
-                }finally {
-                    loading = false
+    BasicAlertDialog(
+        onDismissRequest = onClose,
+        modifier = Modifier
+            .size(300.dp)
+            .background(Color.White, shape = RoundedCornerShape(12.dp))
+    ) {
+        if (loading) {
+            try {
+                if (FirebaseAuth.getInstance().currentUser?.displayName.toString() != "retailer") {
+                    FirebaseFirestore.getInstance()
+                        .collection(
+                            FirebaseAuth.getInstance().currentUser?.displayName.toString()
+                                .replaceFirstChar {
+                                    it.uppercase()
+                                })
+                        .document(FirebaseAuth.getInstance().currentUser?.email.toString())
+                        .collection("ChainUsers")
+                        .get().addOnSuccessListener { result ->
+                            addedChainUsers = result
+                            Log.e(TAG, "listToShow: $addedChainUsers")
+                        }
+                } else {
+                    FirebaseFirestore.getInstance()
+                        .collection("Customer")
+                        .get().addOnSuccessListener { result ->
+                            addedChainUsers = result
+                            Log.e(TAG, "listToShow: $addedChainUsers")
+                        }
                 }
-            }else{
+            } catch (e: Exception) {
+                Log.e(TAG, "Error fetching data for chainusers: $e")
+            } finally {
+                loading = false
+            }
+        } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -358,7 +413,7 @@ fun ShowStatusDialog(
                     onValueChange = { viewModel.updateSenderTextFieldValue(it) },
                     readOnly = true
 
-                    )
+                )
                 val context = LocalContext.current
 
                 OutlinedTextField(
@@ -376,11 +431,15 @@ fun ShowStatusDialog(
                     trailingIcon = {
                         IconButton(
                             onClick = {
-                            expand = !expand
-                            keyboardController?.hide()
-                        }) {
+                                expand = !expand
+                                keyboardController?.hide()
+                            }) {
                             Icon(
-                                imageVector = if (expand){Icons.Filled.Remove}else{Icons.Filled.Add},
+                                imageVector = if (expand) {
+                                    Icons.Filled.Remove
+                                } else {
+                                    Icons.Filled.Add
+                                },
                                 contentDescription = "Person"
                             )
                         }
@@ -391,7 +450,10 @@ fun ShowStatusDialog(
                     expanded = expand,
                     onDismissRequest = { /*TODO*/ },
                     offset = DpOffset.Zero,
-                    properties = PopupProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
+                    properties = PopupProperties(
+                        dismissOnBackPress = true,
+                        dismissOnClickOutside = true
+                    )
                 ) {
                     addedChainUsers?.documents?.forEach {
                         DropdownMenuItem(
@@ -407,6 +469,34 @@ fun ShowStatusDialog(
                 }
 
                 Spacer(modifier = Modifier.height(15.dp))
+                val settingResultRequest = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.StartIntentSenderForResult()
+                ) { activityResult ->
+                    if (activityResult.resultCode == RESULT_OK)
+                        Log.d("appDebug", "Accepted")
+                    else {
+                        Log.d("appDebug", "Denied")
+                    }
+                }
+                Button(
+                    onClick =
+                    {
+                        viewModel.checkLocationSetting(context,
+                            onDisabled = { intentSenderRequest ->
+                                settingResultRequest.launch(intentSenderRequest)
+                            },
+                            onEnabled = { /* This will call when setting is already enabled */
+                                viewModel.getLocation(context)
+                            }
+
+
+                        )
+                    }) {
+                    Text(text = "Get Location")
+                }
+                Text(text = "Location: ${viewModel.currentLocationLatitude.value}, ${viewModel.currentLocationLongitude.value}")
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -415,15 +505,18 @@ fun ShowStatusDialog(
                 ) {
                     ElevatedButton(
                         onClick = {
-                        viewModel.submitChangeDialogue.value = false
-                        keyboardController?.hide()
-                        viewModel.isKeyBoardActive.value = false
-                    },
-                        modifier = Modifier.fillMaxWidth().weight(1f)
+                            viewModel.submitChangeDialogue.value = false
+                            keyboardController?.hide()
+                            viewModel.isKeyBoardActive.value = false
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
 
                     ) {
                         Text(text = "Close")
                     }
+                    Spacer(modifier = Modifier.width(10.dp))
                     ElevatedButton(
                         onClick = {
                             viewModel.events(
@@ -432,7 +525,9 @@ fun ShowStatusDialog(
                             viewModel.submitChangeDialogue.value = false
                             keyboardController?.hide()
                         },
-                        modifier = Modifier.fillMaxWidth().weight(1f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
                     ) {
                         Text(text = "Submit")
                     }
@@ -441,7 +536,36 @@ fun ShowStatusDialog(
             }
         }
     }
+}
+
+
+
+
+@RequiresApi(Build.VERSION_CODES.M)
+@Composable
+fun GpsPermissionAndLocation(updateMedicineViewModel: UpdateMedicineViewModel) {
+    val context = LocalContext.current
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission is granted. Continue with your task.
+        updateMedicineViewModel.getLocation(context)
+        } else {
+            updateMedicineViewModel.currentGpsLocationStatus.value = "Permission Denied"
+            Toast.makeText(context,"Permission Denied",
+                Toast.LENGTH_SHORT).show()
+            // Permission is denied. Show a message to the user.
+        }
     }
+
+    LaunchedEffect(Unit) {
+        if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+}
 
 
 

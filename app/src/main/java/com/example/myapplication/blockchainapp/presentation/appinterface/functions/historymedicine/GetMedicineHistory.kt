@@ -22,14 +22,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,8 +36,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -48,15 +43,14 @@ import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MedicalInformation
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -103,7 +97,6 @@ import androidx.navigation.NavHostController
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.ai.client.generativeai.GenerativeModel
 import com.google.gson.Gson
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
@@ -341,7 +334,12 @@ fun GetMedicineHistoryScreen(
                             }
                         }
                     }
-
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp),
+                        thickness = 1.dp
+                    )
 
 
                     //Dialog to show Success or Failure
@@ -506,7 +504,7 @@ fun ShowScoreDialog(
         )
     }
 
-    AlertDialog(
+    BasicAlertDialog(
         onDismissRequest = onClose,
         modifier = Modifier
             .width(300.dp)
@@ -767,40 +765,13 @@ Column {
 
 
 
-class BarcodeAnalyser(
-    val callback: (Any?) -> Unit
-) : ImageAnalysis.Analyzer {
-    @androidx.annotation.OptIn(ExperimentalGetImage::class)
-    override fun analyze(imageProxy: ImageProxy) {
-
-        val options = BarcodeScannerOptions.Builder()
-            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
-            .build()
-
-        val scanner = BarcodeScanning.getClient(options)
-        val mediaImage = imageProxy.image
-        mediaImage?.let {
-            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-
-            scanner.process(image)
-                .addOnSuccessListener { barcodes ->
-                    if (barcodes.isNotEmpty()) {
-                        val qrCodeData = barcodes[0].displayValue // Assuming there's only one QR code
-                        callback(qrCodeData)
-                    }
-                }
-                .addOnFailureListener {
-                    // Task failed with an exception
-                    // ...
-                }
-        }
-        imageProxy.close()
-    }
-}
 
 @ExperimentalGetImage
 @Composable
 fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewModel) {
+    val qrCodeData = remember {
+        mutableStateOf("")
+    }
     Column(modifier = Modifier.fillMaxSize()) {
         if (getMedicineHistoryViewModel.startQrCodeScanner) {
             AndroidView(
@@ -835,6 +806,8 @@ fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewMod
                                     cameraProvider.unbindAll()
                                     getMedicineHistoryViewModel.qrCodeData = qrcodeData.toString()
                                     getMedicineHistoryViewModel.startQrCodeScanner = false
+                                    qrCodeData.value = qrcodeData.toString()
+
                                 }
                                 )
                             }
@@ -875,5 +848,36 @@ fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewMod
                 }
             }
         }
+    }
+}
+
+class BarcodeAnalyser(
+    val callback: (Any?) -> Unit
+) : ImageAnalysis.Analyzer {
+    @androidx.annotation.OptIn(ExperimentalGetImage::class)
+    override fun analyze(imageProxy: ImageProxy) {
+
+        val options = BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+
+        val scanner = BarcodeScanning.getClient(options)
+        val mediaImage = imageProxy.image
+        mediaImage?.let {
+            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+
+            scanner.process(image)
+                .addOnSuccessListener { barcodes ->
+                    if (barcodes.isNotEmpty()) {
+                        val qrCodeData = barcodes[0].displayValue // Assuming there's only one QR code
+                        callback(qrCodeData)
+                    }
+                }
+                .addOnFailureListener {
+                    // Task failed with an exception
+                    // ...
+                }
+        }
+        imageProxy.close()
     }
 }

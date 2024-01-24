@@ -1,15 +1,28 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.updatemedicine
 
+import android.Manifest
 import android.content.ContentValues
+import android.content.Context
+import android.content.IntentSender
+import android.content.pm.PackageManager
 import android.icu.util.Calendar
 import android.util.Log
+import androidx.activity.result.IntentSenderRequest
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
 import com.example.myapplication.blockchainapp.data.blockchianapi.address
 import com.example.myapplication.blockchainapp.data.dto.Medicine
 import com.example.myapplication.blockchainapp.data.dto.MedicineId
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.LocationSettingsRequest
+import com.google.android.gms.location.LocationSettingsResponse
+import com.google.android.gms.location.SettingsClient
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
@@ -23,7 +36,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 class UpdateMedicineViewModel : ViewModel() {
-    private val _id = MutableStateFlow("1")
+    private val _id = MutableStateFlow("6")
     val id = _id.asStateFlow()
 
     fun updateTextFieldValue(newValue: String) {
@@ -52,6 +65,13 @@ class UpdateMedicineViewModel : ViewModel() {
 
     var isKeyBoardActive = mutableStateOf(false)
 
+    var currentLocationLatitude = mutableStateOf("")
+
+    var currentLocationLongitude = mutableStateOf("")
+
+    var currentGpsLocationStatus = mutableStateOf("")
+
+    var getGpsPermissionStatus = mutableStateOf(false)
 
     private val _loading = MutableStateFlow(false)
     val loading = _loading.asStateFlow()
@@ -209,4 +229,84 @@ class UpdateMedicineViewModel : ViewModel() {
             }
         }
     }
+
+    fun getLocation(context: Context) {
+        val fusedLocationClient = LocationServices
+            .getFusedLocationProviderClient(context)
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        fusedLocationClient.getCurrentLocation(
+            LocationRequest.PRIORITY_HIGH_ACCURACY,
+            null
+        )
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    // Process location data
+                    currentLocationLatitude.value = location.latitude.toString()
+                    currentLocationLongitude.value = location.longitude.toString()
+                    Log.d("Location", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
+                    currentGpsLocationStatus.value = "Success"
+                } else {
+                    // Handle location not found
+                    currentGpsLocationStatus.value = "Fail"
+                    Log.d("Location", "Location not found")
+                }
+            }
+            .addOnFailureListener { exception ->
+                // Handle location retrieval errors
+                currentGpsLocationStatus.value = "Fail"
+                Log.e("Location", "Error getting location: ${exception.message}")
+            }
+    }
+
+    // call this function on button click
+    fun checkLocationSetting(
+        context: Context,
+        onDisabled: (IntentSenderRequest) -> Unit,
+        onEnabled: () -> Unit
+    ) {
+
+        val locationRequest = LocationRequest.create().apply {
+
+        }
+
+        val client: SettingsClient = LocationServices.getSettingsClient(context)
+        val builder: LocationSettingsRequest.Builder = LocationSettingsRequest
+            .Builder()
+            .addLocationRequest(locationRequest)
+
+        val gpsSettingTask: Task<LocationSettingsResponse> =
+            client.checkLocationSettings(builder.build())
+
+        gpsSettingTask.addOnSuccessListener { onEnabled() }
+        gpsSettingTask.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException) {
+                try {
+                    val intentSenderRequest = IntentSenderRequest
+                        .Builder(exception.resolution)
+                        .build()
+                    onDisabled(intentSenderRequest)
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    // ignore here
+                }
+            }
+        }
+
+    }
+
 }
