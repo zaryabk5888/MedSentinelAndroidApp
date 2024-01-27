@@ -276,9 +276,14 @@ fun GetMedicineScreen(
                                     title = "Sender ID",
                                     value = oneMedicineData!!.SenderId
                                 )
+
                                 MedicationInfoCard(
                                     title = "Receiver ID",
                                     value = oneMedicineData!!.ReceiverId
+                                )
+                                MedicationInfoCard(
+                                    title = "Current Location",
+                                    value = oneMedicineData!!.Location
                                 )
 
                             }

@@ -1,7 +1,6 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.getmedicine
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.blockchainapp.data.blockchianapi.MedicineApi
@@ -23,7 +22,7 @@ class GetMedicineViewModel :ViewModel() {
         _loadingQrCode.value = newValue
     }
 
-    private val _id = MutableStateFlow("6")
+    private val _id = MutableStateFlow("")
     val id = _id.asStateFlow()
 
 
@@ -87,7 +86,8 @@ class GetMedicineViewModel :ViewModel() {
                         DosageForm = oneMedicineData.value!!.DosageForm,
                         TimeStamp = oneMedicineData.value!!.TimeStamp,
                         Batch_No = oneMedicineData.value!!.Batch_No,
-                        JourneyCompleted = "false"
+                        JourneyCompleted = "false",
+                        Location = oneMedicineData.value!!.Location
                     )
 
                     val json = Gson().toJson(medicineData)

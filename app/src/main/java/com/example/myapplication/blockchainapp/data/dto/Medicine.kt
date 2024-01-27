@@ -15,6 +15,7 @@ data class Medicine(
     val DosageForm: String,
     val TimeStamp: String,
     val Batch_No : String,//batch no 15%
-    val JourneyCompleted : String
+    val JourneyCompleted : String,
+    val Location : String,
 )
 

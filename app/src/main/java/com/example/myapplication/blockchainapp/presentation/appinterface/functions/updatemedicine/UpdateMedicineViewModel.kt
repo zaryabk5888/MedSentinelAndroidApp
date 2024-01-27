@@ -5,10 +5,11 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.IntentSender
 import android.content.pm.PackageManager
-import android.icu.util.Calendar
 import android.util.Log
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -36,7 +37,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 class UpdateMedicineViewModel : ViewModel() {
-    private val _id = MutableStateFlow("6")
+    private val _id = MutableStateFlow("")
     val id = _id.asStateFlow()
 
     fun updateTextFieldValue(newValue: String) {
@@ -80,12 +81,23 @@ class UpdateMedicineViewModel : ViewModel() {
         _loading.value = newValue
     }
 
+    private val _camerOn = MutableStateFlow(false)
+    val cameraOn = _camerOn.asStateFlow()
+
+    fun updateCameraState(newValue: Boolean) {
+        _camerOn.value = newValue
+    }
+
     private val _oneMedicineData = MutableStateFlow<Medicine?>(null)
     val oneMedicineData = _oneMedicineData.asStateFlow()
 
     fun updateMedicineState(value: Medicine?) {
         _oneMedicineData.value = value
     }
+
+    var startQrCodeScanner by mutableStateOf(true)
+    var processingQrCodedata by mutableStateOf(true)
+    var qrCodeData by mutableStateOf("")
 
     private val gson: Gson = GsonBuilder()
         .setLenient()
@@ -162,7 +174,8 @@ class UpdateMedicineViewModel : ViewModel() {
                             DosageForm = oneMedicineData.value!!.DosageForm,
                             TimeStamp = oneMedicineData.value!!.TimeStamp,
                             Batch_No = oneMedicineData.value!!.Batch_No,
-                            JourneyCompleted = "true"
+                            JourneyCompleted = "true",
+                            Location = "${currentLocationLatitude.value},${currentLocationLongitude.value}"
                         )
                     )
                 }else{
@@ -181,7 +194,8 @@ class UpdateMedicineViewModel : ViewModel() {
                             DosageForm = oneMedicineData.value!!.DosageForm,
                             TimeStamp = oneMedicineData.value!!.TimeStamp,
                             Batch_No = oneMedicineData.value!!.Batch_No,
-                            JourneyCompleted = "false"
+                            JourneyCompleted = "false",
+                            Location = "${currentLocationLatitude.value},${currentLocationLongitude.value}"
                         )
                     )
                 }
@@ -241,13 +255,6 @@ class UpdateMedicineViewModel : ViewModel() {
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return
         }
         fusedLocationClient.getCurrentLocation(

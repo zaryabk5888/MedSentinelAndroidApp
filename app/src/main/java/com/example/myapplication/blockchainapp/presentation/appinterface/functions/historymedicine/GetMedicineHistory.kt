@@ -103,8 +103,10 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.delay
+import okhttp3.internal.wait
 import java.util.concurrent.Executors
 import kotlin.math.cos
+import kotlin.math.log
 import kotlin.math.sin
 
 
@@ -234,7 +236,28 @@ fun GetMedicineHistoryScreen(
                 }
 
                     if (cameraOn){
-                        CameraPermissionComposable(getMedicineHistoryViewModel)
+                        if (getMedicineHistoryViewModel.startQrCodeScanner){
+                            getMedicineHistoryViewModel.qrCodeData = CameraPermissionComposable()
+
+                            if (getMedicineHistoryViewModel.qrCodeData.isNotEmpty()){
+                                getMedicineHistoryViewModel.startQrCodeScanner = false
+                            }
+
+                            if (!(getMedicineHistoryViewModel.processingQrCodedata and getMedicineHistoryViewModel.startQrCodeScanner)){
+                                CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+                                if (getMedicineHistoryViewModel.qrCodeData.isNotEmpty()){
+                                    val jsonQrCodeData = Gson().fromJson(getMedicineHistoryViewModel.qrCodeData, Medicine::class.java)
+                                    getMedicineHistoryViewModel.updateTextFieldValue(jsonQrCodeData.ID)
+                                    getMedicineHistoryViewModel.processingQrCodedata = !getMedicineHistoryViewModel.processingQrCodedata
+
+                                }
+                            }
+                        }
+
+
+
+
+                        Log.e(TAG, "qr: ${getMedicineHistoryViewModel.qrCodeData}", )
                         //PreviewViewComposable()
                     }
                     Spacer(modifier = Modifier.height(10.dp))
@@ -701,6 +724,7 @@ fun EachHistoryRecord(medicine: Medicine) {
             Spacer(modifier = Modifier.height(8.dp))
             LabeledText(label = "Sender ID", value = medicine.SenderId)
             LabeledText(label = "Receiver ID", value = medicine.ReceiverId)
+            LabeledText(label = "Location", value = medicine.Location)
         }
     }
 }
@@ -725,8 +749,11 @@ fun LabeledText(label: String, value: String) {
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class) @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CameraPermissionComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewModel) {
+fun CameraPermissionComposable(): String {
 
+    val v = remember {
+        mutableStateOf("")
+    }
     val context = LocalContext.current
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val launchCamera = remember { mutableStateOf(false) }
@@ -756,11 +783,13 @@ Column {
     }
     Spacer(modifier = Modifier.height(30.dp))
     if (launchCamera.value) {
-        getMedicineHistoryViewModel.allMedicineData.value = emptyList()
-        PreviewViewComposable(getMedicineHistoryViewModel)
+
+        v.value = PreviewViewComposable()
+        Log.e(TAG, "yes: $v", )
+        return@Column
     }
 }
-
+    return v.value
 }
 
 
@@ -768,12 +797,11 @@ Column {
 
 @ExperimentalGetImage
 @Composable
-fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewModel) {
+fun PreviewViewComposable(): String {
     val qrCodeData = remember {
         mutableStateOf("")
     }
     Column(modifier = Modifier.fillMaxSize()) {
-        if (getMedicineHistoryViewModel.startQrCodeScanner) {
             AndroidView(
                 { context ->
                     val cameraExecutor = Executors.newSingleThreadExecutor()
@@ -804,9 +832,10 @@ fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewMod
                                     ).show()
                                     cameraExecutor.shutdown()
                                     cameraProvider.unbindAll()
-                                    getMedicineHistoryViewModel.qrCodeData = qrcodeData.toString()
-                                    getMedicineHistoryViewModel.startQrCodeScanner = false
+                                //    getMedicineHistoryViewModel.qrCodeData = qrcodeData.toString()
+                                  //  getMedicineHistoryViewModel.startQrCodeScanner = false
                                     qrCodeData.value = qrcodeData.toString()
+                                    return@BarcodeAnalyser
 
                                 }
                                 )
@@ -836,19 +865,19 @@ fun PreviewViewComposable(getMedicineHistoryViewModel: GetMedicineHistoryViewMod
 
                 )
             Spacer(modifier = Modifier.height(30.dp))
-        }
-        else{
-            if (getMedicineHistoryViewModel.processingQrCodedata){
-                CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
-                if (getMedicineHistoryViewModel.qrCodeData.isNotEmpty()){
-                    val jsonQrCodeData = Gson().fromJson(getMedicineHistoryViewModel.qrCodeData, Medicine::class.java)
-                    getMedicineHistoryViewModel.updateTextFieldValue(jsonQrCodeData.ID)
-                    getMedicineHistoryViewModel.processingQrCodedata = !getMedicineHistoryViewModel.processingQrCodedata
-                    Log.e(TAG, "PreviewViewComposable: yes", )
-                }
-            }
-        }
+       // else{
+          //  if (getMedicineHistoryViewModel.processingQrCodedata){
+               // CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+               // if (getMedicineHistoryViewModel.qrCodeData.isNotEmpty()){
+                  //  val jsonQrCodeData = Gson().fromJson(getMedicineHistoryViewModel.qrCodeData, Medicine::class.java)
+                //    getMedicineHistoryViewModel.updateTextFieldValue(jsonQrCodeData.ID)
+              //      getMedicineHistoryViewModel.processingQrCodedata = !getMedicineHistoryViewModel.processingQrCodedata
+            //        Log.e(TAG, "PreviewViewComposable: yes", )
+          //      }
+        //    }
+      //  }
     }
+    return qrCodeData.value
 }
 
 class BarcodeAnalyser(

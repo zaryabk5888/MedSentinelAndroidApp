@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,7 +34,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -64,14 +65,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.myapplication.blockchainapp.data.dto.Medicine
+import com.example.myapplication.blockchainapp.presentation.appinterface.functions.historymedicine.CameraPermissionComposable
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
+import com.google.gson.Gson
 import kotlinx.coroutines.delay
 
 
@@ -89,6 +94,7 @@ fun UpdateMedicineScreen(
     val scrollState = rememberScrollState()
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
+    val cameraOn by updateMedicineViewModel.cameraOn.collectAsState()
 
   
     Scaffold(
@@ -118,21 +124,34 @@ fun UpdateMedicineScreen(
 
             ) {
 
-                Row(
-
-                ) {
+                Row {
                     OutlinedTextField(
                         label = { Text(text = "ID") },
                         value = textFieldValue,
                         onValueChange = { updateMedicineViewModel.updateTextFieldValue(it) },
-                        modifier = Modifier.weight(0.75f)
+                        modifier = Modifier.weight(0.75f),
+                        readOnly = cameraOn,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Done // Set the IME action to Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                // Hide the keyboard when Done button is clicked
+                                updateMedicineViewModel.events(
+                                    updateScreenEvents = UpdateScreenEvents.Get
+                                )
+                                keyboardController?.hide()
+                            }
+                        )
+
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))
 
                     IconButton(
                         onClick = {
-
+                            updateMedicineViewModel.updateCameraState(!cameraOn)
                         },
                         modifier = Modifier.weight(0.25f).align(Alignment.CenterVertically)
                     ) {
@@ -165,6 +184,7 @@ fun UpdateMedicineScreen(
                             updateMedicineViewModel.updateSenderTextFieldValue(newValue = "")
                             updateMedicineViewModel.updateTextFieldValue(newValue = "")
                             updateMedicineViewModel.updateMedicineState(value = null)
+                            keyboardController?.hide()
                         },
                         modifier = Modifier.weight(1f)
                     ) {
@@ -177,6 +197,29 @@ fun UpdateMedicineScreen(
                         .padding(10.dp),
                     thickness = 1.dp,
                 )
+
+                if (cameraOn){
+                    if (updateMedicineViewModel.startQrCodeScanner){
+                        updateMedicineViewModel.qrCodeData = CameraPermissionComposable()
+
+                        if (updateMedicineViewModel.qrCodeData.isNotEmpty()){
+                            updateMedicineViewModel.startQrCodeScanner = false
+                        }
+
+                        if (!(updateMedicineViewModel.processingQrCodedata and updateMedicineViewModel.startQrCodeScanner)){
+                            CircularProgressIndicator(Modifier.align(CenterHorizontally))
+                            if (updateMedicineViewModel.qrCodeData.isNotEmpty()){
+                                val jsonQrCodeData = Gson().fromJson(updateMedicineViewModel.qrCodeData, Medicine::class.java)
+                                updateMedicineViewModel.updateTextFieldValue(jsonQrCodeData.ID)
+                                updateMedicineViewModel.processingQrCodedata = !updateMedicineViewModel.processingQrCodedata
+
+                                updateMedicineViewModel.updateCameraState(false)
+                            }
+                        }
+                    }
+
+                    Log.e(TAG, "qr: ${updateMedicineViewModel.qrCodeData}", )
+                }
 
                 if (loading) {
                     CircularProgressIndicator(
@@ -215,7 +258,7 @@ fun UpdateMedicineScreen(
                             value = oneMedicineData!!.DosageForm
                         )
                         MedicationInfoCard(
-                            title = "Description",
+                            title = "TimeStamped",
                             value = oneMedicineData!!.TimeStamp
                         )
                         MedicationInfoCard(
@@ -238,6 +281,10 @@ fun UpdateMedicineScreen(
                             title = "Receiver ID",
                             value = oneMedicineData!!.ReceiverId
                         )
+                        MedicationInfoCard(
+                            title = "Location",
+                            value = oneMedicineData!!.Location
+                        )
 
 
                         if (updateMedicineViewModel.isKeyBoardActive.value) {
@@ -256,7 +303,8 @@ fun UpdateMedicineScreen(
                                     if(
                                         updateMedicineViewModel.oneMedicineData.value?.ReceiverId == updateMedicineViewModel.sender.value
                                         &&
-                                        updateMedicineViewModel.oneMedicineData.value?.JourneyCompleted == "false")
+                                        updateMedicineViewModel.oneMedicineData.value?.JourneyCompleted == "false"
+                                        )
                                     { //
                                         Log.e(
                                             TAG,

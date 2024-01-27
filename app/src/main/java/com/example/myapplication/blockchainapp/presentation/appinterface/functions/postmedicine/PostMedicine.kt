@@ -1,7 +1,13 @@
 package com.example.myapplication.blockchainapp.presentation.appinterface.functions.postmedicine
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +29,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EditCalendar
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -56,6 +64,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.myapplication.blockchainapp.data.dto.Medicine
+import com.example.myapplication.blockchainapp.presentation.appinterface.functions.updatemedicine.GpsPermissionAndLocation
+import com.example.myapplication.blockchainapp.presentation.appinterface.functions.updatemedicine.UpdateMedicineViewModel
 import com.google.gson.Gson
 import com.simonsickle.compose.barcodes.Barcode
 import com.simonsickle.compose.barcodes.BarcodeType
@@ -277,6 +287,59 @@ fun PostMedicineScreen(
 
                             Spacer(modifier = Modifier.height(10.dp))
 
+
+                                //Location request
+                            val settingResultRequest = rememberLauncherForActivityResult(
+                                contract = ActivityResultContracts.StartIntentSenderForResult()
+                            ) { activityResult ->
+                                if (activityResult.resultCode == Activity.RESULT_OK)
+                                    Log.d("appDebug", "Accepted")
+                                else {
+                                    Log.d("appDebug", "Denied")
+                                }
+                            }
+
+                            // location Status
+                            OutlinedTextField(
+                                value = "${postMedicineViewModel.currentLocationLatitude.value}, ${postMedicineViewModel.currentLocationLongitude.value}",
+                                onValueChange = {
+
+                                },
+                                label = { Text(text = "Location") },
+                                modifier = Modifier.fillMaxWidth(),
+                                readOnly = true,
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = {
+
+                                            if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                                postMedicineViewModel.getGpsPermissionStatus.value = true
+                                                Toast.makeText(context,"Location Permission Not Granted",
+                                                    Toast.LENGTH_SHORT).show()
+                                            } else {
+
+                                                postMedicineViewModel.checkLocationSetting(context,
+                                                    onDisabled = { intentSenderRequest ->
+                                                        settingResultRequest.launch(intentSenderRequest)
+                                                    },
+                                                    onEnabled = { /* This will call when setting is already enabled */
+                                                        postMedicineViewModel.getLocation(context)
+                                                    }
+                                                )
+                                            }
+
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Filled.GpsFixed,
+                                            contentDescription = "Location"
+                                        )
+                                    }
+
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
                             // Journey Status
                             OutlinedTextField(
                                 value = "false",
@@ -294,7 +357,9 @@ fun PostMedicineScreen(
                                 onClick = {
                                     if (postMedicineViewModel.id.value.isEmpty() || postMedicineViewModel.name.value.isEmpty() || postMedicineViewModel.batch_no.value.isEmpty() ||
                                         postMedicineViewModel.brand.value.isEmpty() || postMedicineViewModel.manufacturedDate.value.isEmpty() || postMedicineViewModel.expiryDate.value.isEmpty() ||
-                                        postMedicineViewModel.senderId.value.isEmpty() || postMedicineViewModel.receiverId.value.isEmpty() || postMedicineViewModel.dosageForm.value.isEmpty()
+                                        postMedicineViewModel.senderId.value.isEmpty() || postMedicineViewModel.receiverId.value.isEmpty() ||
+                                        postMedicineViewModel.dosageForm.value.isEmpty() || postMedicineViewModel.currentLocationLatitude.value.isEmpty()
+                                        || postMedicineViewModel.currentLocationLongitude.value.isEmpty()
                                     ) {
                                         Toast.makeText(
                                             context,
@@ -318,11 +383,9 @@ fun PostMedicineScreen(
                         }
                     }
                 }
-                //generate qr code
-                if (generateQrCode.value) {
-                    //MedicineQRCode(postMedicineViewModel)
+                if (postMedicineViewModel.getGpsPermissionStatus.value){
+                    Gps(postMedicineViewModel = postMedicineViewModel)
                 }
-
 
 
                 //Dialog to show Success or Failure
@@ -391,7 +454,7 @@ fun ShowStatusDialog(
     onClose: () -> Unit,
     viewModel: PostMedicineViewModel
 ) {
-    AlertDialog(
+    BasicAlertDialog(
         onDismissRequest = onClose,
         modifier = Modifier
             .height(200.dp)
@@ -415,7 +478,11 @@ fun ShowStatusDialog(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = if (loading){"Loading..."} else{if (success) viewModel.retrofitMessage.value else viewModel.retrofitMessage.value },
+                text = if (loading) {
+                    "Loading..."
+                } else {
+                    if (success) viewModel.retrofitMessage.value else viewModel.retrofitMessage.value
+                },
                 style = MaterialTheme.typography.labelLarge,
                 color = if (success) Color.Black else Color.Red
             )
@@ -455,5 +522,34 @@ fun convertMillisToDate(millis: Long): String {
     val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     return localDateTime.format(formatter)
+}
+
+
+@RequiresApi(Build.VERSION_CODES.M)
+@Composable
+fun Gps(postMedicineViewModel: PostMedicineViewModel) {
+    val context = LocalContext.current
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission is granted. Continue with your task.
+            postMedicineViewModel.getLocation(context)
+        } else {
+            postMedicineViewModel.currentGpsLocationStatus.value = "Permission Denied"
+            Toast.makeText(context,"Grant Location Permission Manually",
+                Toast.LENGTH_SHORT).show()
+            // Permission is denied. Show a message to the user.
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }else{
+
+        }
+    }
+
 }
 

@@ -182,7 +182,7 @@ fun PrimaryScreen(navController: NavHostController) {
                                             navController.navigate(Screen.UpdateScreen.route)
                                         },
                                         CardData(
-                                            "Show Medicine History",
+                                            "Medicine History",
                                             Icons.Filled.History
                                         ) {
                                             navController.navigate(Screen.HistoryScreen.route)
