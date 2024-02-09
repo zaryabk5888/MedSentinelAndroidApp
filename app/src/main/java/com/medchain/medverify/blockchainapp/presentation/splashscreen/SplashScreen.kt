@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.blockchainapp.R
+import com.medverify.blockchainapp.R
 
 
 @Composable
@@ -33,16 +33,5 @@ import com.example.blockchainapp.R
                 contentDescription = "App Logo"
             )
         }
-    }
-
-    @Composable
-    fun MainScreen() {
-
-    }
-
-    @Preview
-    @Composable
-    fun SplashScreenPreview() {
-        SplashScreen()
     }
 

@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.medchain.medverify.blockchainapp.presentation.navigationcomponent.Screen
 import com.google.firebase.auth.FirebaseAuth
-import com.example.blockchainapp.R
+import com.medverify.blockchainapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
