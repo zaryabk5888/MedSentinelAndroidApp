@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.example.blockchainapp" />
-                  <option name="mobileSdkAppId" value="1:532497245689:android:2280c901599e53333dc928" />
-                  <option name="projectId" value="blockchainapp-cb9f8" />
-                  <option name="projectNumber" value="532497245689" />
+                  <option name="appId" value="PLACEHOLDER" />
+                  <option name="mobileSdkAppId" value="" />
+                  <option name="projectId" value="" />
+                  <option name="projectNumber" value="" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

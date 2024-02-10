@@ -1,4 +1,4 @@
-# MedSentinelAndroidApp
+# MedVerifyAndroidApp
 
 Fake pharmaceutical product identification system is a system designed to help both 
 companies and individual customers to help save them from fake and counterfeit 

@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace 'com.medverify.blockchainapp'
+    namespace 'com.CUST.MedVerify.blockchainapp'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.medverify.blockchainapp"
+        applicationId "com.CUST.MedVerify.blockchainapp"
         minSdk 21
         targetSdk 34
         versionCode 1
