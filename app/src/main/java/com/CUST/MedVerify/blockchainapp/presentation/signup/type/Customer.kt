@@ -8,13 +8,28 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.CUST.MedVerify.blockchainapp.R
-
 import com.CUST.MedVerify.blockchainapp.presentation.navigationcomponent.Screen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.userProfileChangeRequest
@@ -66,7 +80,14 @@ fun Customer(navController: NavHostController) {
                             contentDescription = "Go Back"
                         )
                     }
-                }
+                },
+                colors = TopAppBarColors(
+                    containerColor = Color(0xFF0B1446),
+                    scrolledContainerColor = Color.Transparent,
+                    navigationIconContentColor = Color.White,
+                    titleContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                )
             )
         }
     ) { paddingValue ->
@@ -75,20 +96,20 @@ fun Customer(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(paddingValue)
                 .verticalScroll(rememberScrollState())
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF0B1446),
+                            Color(0xFF040F4B),
+                            Color(0xFF23D5F0)
+                        )
+                    )
+                )
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFFF6F6F6),
-                                Color(0xFFF6F6F6)
-                            )
-                        )
-                    )
-                    .padding(16.dp)
-                    .clip(RoundedCornerShape(40.dp))
+
             ) {
                 Column(
                     modifier = Modifier
@@ -124,7 +145,12 @@ fun Customer(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 10.dp),
-                        enabled = !clickedSignUp
+                        enabled = !clickedSignUp,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
 
                     OutlinedTextField(
@@ -134,7 +160,13 @@ fun Customer(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 10.dp),
-                        enabled = !clickedSignUp
+                        enabled = !clickedSignUp,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
+
                     )
 
                     OutlinedTextField(
@@ -144,7 +176,12 @@ fun Customer(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 10.dp),
-                        enabled = !clickedSignUp
+                        enabled = !clickedSignUp,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
 
                     OutlinedTextField(
@@ -154,7 +191,12 @@ fun Customer(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 10.dp),
-                        enabled = !clickedSignUp
+                        enabled = !clickedSignUp,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
 
                     Button(
@@ -230,6 +272,8 @@ fun signUpCustomer(
                     displayName = "customer"
                 }
 
+
+
                 user?.updateProfile(profileUpdates)?.addOnCompleteListener { updateProfileTask ->
                     if (updateProfileTask.isSuccessful) {
                         Log.e(TAG, "signUpCustomer: Display name set to customer")
@@ -239,6 +283,7 @@ fun signUpCustomer(
                 }
             }.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
+
                     fireBaseFireStore.collection("Customer").document(email).set(data)
                         .addOnCompleteListener {
                             Toast.makeText(context, "Sign up successful", Toast.LENGTH_SHORT).show()

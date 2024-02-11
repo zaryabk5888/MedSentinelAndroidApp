@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import com.CUST.MedVerify.blockchainapp.presentation.navigationcomponent.Navigation
+import com.CUST.MedVerify.blockchainapp.presentation.splashscreen.IntroScreen
+import com.CUST.MedVerify.blockchainapp.presentation.splashscreen.SplashScreen
 import com.CUST.MedVerify.ui.theme.MedVerifyTheme
 import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,8 +21,10 @@ class MainActivity : ComponentActivity() {
             FirebaseApp.initializeApp(this)
                 MedVerifyTheme {
                    //MedicineQRCode()
-                       Navigation()
+                   Navigation()
                    // GpsPermissionAndLocation()
+                    //SplashScreen()
+                   //IntroScreen()
                 }
             }
     }

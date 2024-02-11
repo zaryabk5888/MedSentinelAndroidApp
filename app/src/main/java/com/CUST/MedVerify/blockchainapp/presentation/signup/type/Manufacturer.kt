@@ -62,7 +62,13 @@ fun Manufacturer(navController: NavHostController) {
                             contentDescription = "Go Back"
                         )
                     }
-                }
+                },  colors = TopAppBarColors(
+                    containerColor = Color(0xFF0B1446),
+                    scrolledContainerColor = Color.Transparent,
+                    navigationIconContentColor = Color.White,
+                    titleContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                )
             )
         }
     ) { paddingValue ->
@@ -71,20 +77,20 @@ fun Manufacturer(navController: NavHostController) {
                 .fillMaxSize()
                 .padding(paddingValue)
                 .verticalScroll(rememberScrollState())
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFF0B1446),
+                            Color(0xFF040F4B),
+                            Color(0xFF23D5F0)
+                        )
+                    )
+                )
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFFF6F6F6),
-                                Color(0xFFF6F6F6)
-                            )
-                        )
-                    )
-                    .padding(16.dp)
-                    .clip(RoundedCornerShape(40.dp))
+
             ) {
                 Column(
                     modifier = Modifier
@@ -120,7 +126,12 @@ fun Manufacturer(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 10.dp),
-                        enabled = !clickedSignUp
+                        enabled = !clickedSignUp,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
 
                     OutlinedTextField(
@@ -130,7 +141,12 @@ fun Manufacturer(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 10.dp),
-                        enabled = !clickedSignUp
+                        enabled = !clickedSignUp,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
 
                     OutlinedTextField(
@@ -140,7 +156,12 @@ fun Manufacturer(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 10.dp),
-                        enabled = !clickedSignUp
+                        enabled = !clickedSignUp,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
 
                     OutlinedTextField(
@@ -150,7 +171,12 @@ fun Manufacturer(navController: NavHostController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 10.dp),
-                        enabled = !clickedSignUp
+                        enabled = !clickedSignUp,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Color.White,
+                            unfocusedLabelColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        )
                     )
 
                     Button(
